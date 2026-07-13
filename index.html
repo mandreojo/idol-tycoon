@@ -100,7 +100,20 @@
   .gbadge{width:30px;text-align:center;font-size:11px;font-weight:900;color:#0e0b1a;
     border-radius:7px;padding:2px 0;letter-spacing:-.5px}
 
+  /* 연습실 패널 (빈 공간 채움 + 다음 관문 안내) */
+  .practice{display:flex;align-items:center;gap:14px;margin:14px 0 0;padding:12px 16px;
+    background:var(--panel);border:1px solid var(--line);border-radius:16px;box-shadow:0 4px 14px rgba(236,58,92,.08)}
+  .pr-buddy{width:54px;height:54px;image-rendering:pixelated;image-rendering:crisp-edges;flex:none;
+    animation:prBob 1.5s ease-in-out infinite}
+  @keyframes prBob{0%,100%{transform:translateY(0) scaleY(1)}50%{transform:translateY(-6px) scaleY(1.04)}}
+  .pr-info{flex:1;min-width:0}
+  .pr-label{font-size:11px;color:var(--sub);font-weight:700}
+  .pr-next{font-size:15px;font-weight:800;margin:2px 0 8px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .pr-track{height:8px;background:var(--panel2);border-radius:20px;overflow:hidden}
+  .pr-track>i{display:block;height:100%;border-radius:20px;transition:width .5s;
+    background:linear-gradient(90deg,var(--accent2),var(--accent))}
   .actions{margin-top:auto}
+  .act .d{margin-left:5px}
   .agrid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px}
   .act{display:flex;align-items:center;gap:9px;background:var(--panel);border:1px solid var(--line);
     border-radius:13px;padding:11px 12px;cursor:pointer;transition:transform .08s,border-color .1s;text-align:left;width:100%}
@@ -332,6 +345,7 @@
     </div>
 
     <div class="stats" id="statBox"></div>
+    <div class="practice" id="practiceBox"></div>
     <div class="actions" id="actionBox"></div>
   </section>
 
@@ -692,6 +706,21 @@ const Game = {
         <span class="bar"><i style="width:${Math.min(100,v)}%;background:${st.c}"></i></span>
         <span class="v">${v}</span>${badge}</div>`;
     }).join("");
+    // 연습실 패널: 도트 버디 + 다음 관문 D-day + 진행바
+    const sex=(idol.cat==="M")?"m":"f";
+    const MS=[{w:10,t:"🎤 데뷔 심사"},{w:15,t:"📺 음악방송 1위 도전"},{w:20,t:"🏆 국내 연말 가요대상"},
+              {w:25,t:"🌍 글로벌 뮤직쇼"},{w:30,t:"👑 글로벌 대상"}];
+    const nx=MS.find(m=>m.w>=s.week)||MS[MS.length-1];
+    const prevW=(MS.filter(m=>m.w<nx.w).map(m=>m.w).pop())||0;
+    const prog=Math.max(6,Math.min(100,Math.round((s.week-prevW)/(nx.w-prevW)*100)));
+    const dday=nx.w-s.week;
+    document.getElementById("practiceBox").innerHTML=
+      `<img class="pr-buddy" src="assets/pixel/${sex}0.png" alt="">
+       <div class="pr-info">
+         <div class="pr-label">다음 관문 ${dday>0?`· D-${dday}주`:"· 이번 주!"}</div>
+         <div class="pr-next">${nx.t}</div>
+         <div class="pr-track"><i style="width:${prog}%"></i></div>
+       </div>`;
     document.getElementById("actionBox").innerHTML=
       `<div class="agrid">${TRAININGS.map(t=>`
         <button class="act" onclick="Game.train('${t.k}')">
