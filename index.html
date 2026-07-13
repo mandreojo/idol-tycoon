@@ -1,0 +1,1276 @@
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<title>아이돌 육성 타이쿤</title>
+<style>
+  :root{
+    --bg:#fff2f4; --panel:#ffffff; --panel2:#fff5f7; --line:#ffdbe1;
+    --txt:#2b2530; --sub:#9a8f9a; --accent:#ec3a5c; --accent2:#ff7a9c;
+    --gold:#f0a01e; --good:#18b06e; --bad:#ef4452;
+    --vocal:#ff4f97; --dance:#2f9fe6; --visual:#f5a516; --charm:#9160f5;
+    --acting:#ff6a3d; --creative:#12bda0; --mental:#8a92ad;
+  }
+  @font-face{font-family:'Jua';src:url('assets/Jua-400.ttf') format('truetype');font-display:swap}
+  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+  html,body{margin:0;padding:0;background:#f3e6e9;color:var(--txt);
+    font-family:'Jua',-apple-system,BlinkMacSystemFont,"Apple SD Gothic Neo","Pretendard",sans-serif}
+  #app{max-width:480px;margin:0 auto;min-height:100vh;background:
+    radial-gradient(120% 55% at 50% -8%, #ffe2e8 0%, var(--bg) 52%);
+    display:flex;flex-direction:column;position:relative;overflow:hidden}
+  .screen{flex:1;display:none;flex-direction:column;padding:16px}
+  .screen.on{display:flex}
+  #s-title{background:radial-gradient(120% 48% at 50% 14%, #ffdde4 0%, var(--bg) 62%)}
+  #logo{width:230px;max-width:70%;height:auto;margin:0 auto;display:block}
+  #titleMascot{width:132px;height:132px;border-radius:50%;object-fit:cover;object-position:top center;
+    margin:0 auto;display:block;border:4px solid #fff;box-shadow:0 10px 22px rgba(236,58,92,.22)}
+  h1{font-size:26px;margin:0;line-height:1.15;letter-spacing:-.5px}
+  h2{font-size:19px;margin:0 0 6px}
+  .muted{color:var(--sub);font-size:13px;line-height:1.5}
+  .btn{appearance:none;border:none;border-radius:14px;padding:15px 16px;
+    font-size:16px;font-weight:700;color:#fff;background:linear-gradient(135deg,var(--accent),var(--accent2));
+    width:100%;cursor:pointer;transition:transform .08s;box-shadow:0 6px 18px -6px var(--accent2)}
+  .btn:active{transform:scale(.97)}
+  .btn.ghost{background:var(--panel2);box-shadow:none;color:var(--txt);border:1px solid var(--line)}
+  .btn:disabled{opacity:.4}
+
+  /* SELECT */
+  .segtab{display:flex;gap:8px;margin-bottom:12px}
+  .seg{flex:1;appearance:none;border:1px solid var(--line);border-radius:12px;padding:11px 8px;
+    background:var(--panel);color:var(--sub);font-size:14px;font-weight:700;cursor:pointer;transition:.1s}
+  .seg.on{background:var(--panel2);color:var(--txt);border-color:var(--accent)}
+  .modebox{flex:1;display:flex;flex-direction:column;min-height:0;padding-bottom:78px}
+  /* 플로팅 시작 버튼 */
+  .startfab{position:fixed;left:50%;bottom:16px;transform:translateX(-50%);
+    width:calc(100% - 32px);max-width:448px;z-index:26;
+    box-shadow:0 10px 26px -6px rgba(236,58,92,.6);
+    transition:transform .28s cubic-bezier(.2,.9,.3,1.3),opacity .2s}
+  .startfab.hide{opacity:0;transform:translateX(-50%) translateY(24px);pointer-events:none}
+  .srch{width:100%;background:var(--panel2);border:1px solid var(--line);border-radius:12px;
+    color:var(--txt);padding:12px 14px;font-size:15px;margin-bottom:10px;-webkit-appearance:none}
+  .srch:focus{outline:none;border-color:var(--accent)}
+  .uploader{display:flex;align-items:center;justify-content:center;height:160px;border-radius:16px;
+    border:2px dashed var(--line);background:var(--panel) center/cover no-repeat;color:var(--sub);
+    cursor:pointer;margin-bottom:12px;text-align:center;overflow:hidden;font-size:32px}
+  .uploader small{font-size:12px;font-weight:600}
+  .specpick{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;padding-bottom:4px}
+  .sp{appearance:none;border:1px solid var(--line);border-radius:12px;padding:11px 4px;
+    background:var(--panel);color:var(--txt);font-size:13px;font-weight:700;cursor:pointer;transition:.1s}
+  .sp.on{border-color:var(--accent);box-shadow:0 0 0 2px var(--accent) inset}
+  .sp .spico{font-size:20px;display:block;margin-bottom:3px}
+  #s-select .grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;overflow-y:auto;padding:4px 0 12px}
+  .card{background:var(--panel);border:1px solid var(--line);border-radius:16px;overflow:hidden;
+    cursor:pointer;transition:transform .1s,border-color .1s;position:relative}
+  .card:active{transform:scale(.97)}
+  .card.sel{border-color:var(--accent);box-shadow:0 0 0 2px var(--accent) inset}
+  .card .ph{width:100%;aspect-ratio:1;background:#ffe0e6 center/cover no-repeat;display:block}
+  .card .nm{padding:8px 10px 4px;font-weight:700;font-size:14px;line-height:1.2}
+  .card .gp{padding:0 10px 10px;color:var(--sub);font-size:11px}
+  .card .tag{position:absolute;top:8px;left:8px;background:rgba(0,0,0,.55);backdrop-filter:blur(4px);
+    font-size:10px;padding:3px 7px;border-radius:20px;font-weight:700}
+
+  /* PLAY header */
+  .top{display:flex;align-items:center;gap:12px;margin-bottom:12px}
+  .avatar{width:76px;height:76px;border-radius:18px;background:#ffe0e6 center/cover no-repeat;
+    flex:none;border:2.5px solid var(--accent);display:flex;align-items:center;justify-content:center;font-size:38px;
+    box-shadow:0 6px 16px rgba(236,58,92,.22)}
+  .top .meta{flex:1;min-width:0}
+  .top .nm{font-weight:800;font-size:17px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .chip{display:inline-block;font-size:11px;padding:2px 8px;border-radius:20px;background:var(--panel2);
+    color:var(--sub);margin-top:3px}
+  .fans{text-align:right;flex:none}
+  .fans b{font-size:19px;color:var(--gold);display:block}
+  .fans span{font-size:10px;color:var(--sub)}
+
+  .actbar{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px}
+  .week{font-weight:800;font-size:15px}
+  .actbanner{font-size:12px;font-weight:700;padding:4px 10px;border-radius:20px;
+    background:linear-gradient(135deg,var(--accent2),var(--accent))}
+
+  .cond{margin-bottom:10px}
+  .barlbl{display:flex;justify-content:space-between;font-size:12px;color:var(--sub);margin-bottom:4px}
+  .barlbl b{color:var(--txt)}
+  .bar{height:9px;background:var(--panel2);border-radius:20px;overflow:hidden}
+  .bar > i{display:block;height:100%;border-radius:20px;transition:width .4s}
+
+  .stats{background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:8px 12px;margin-bottom:10px}
+  .stats,.act,.card,.ev-card,.lb,.uploader,.seg,.btn.ghost{box-shadow:0 4px 14px rgba(236,58,92,.08)}
+  .stat{display:flex;align-items:center;gap:8px;margin:6px 0}
+  .stat .k{width:64px;font-size:12px;font-weight:700;color:var(--sub);white-space:nowrap}
+  .stat .bar{flex:1}
+  .stat .v{width:26px;text-align:right;font-weight:800;font-size:13px;font-variant-numeric:tabular-nums}
+  .gbadge{width:30px;text-align:center;font-size:11px;font-weight:900;color:#0e0b1a;
+    border-radius:7px;padding:2px 0;letter-spacing:-.5px}
+
+  .actions{margin-top:auto}
+  .agrid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px}
+  .act{display:flex;align-items:center;gap:9px;background:var(--panel);border:1px solid var(--line);
+    border-radius:13px;padding:11px 12px;cursor:pointer;transition:transform .08s,border-color .1s;text-align:left;width:100%}
+  .act:active{transform:scale(.97)}
+  .act.rest{background:var(--panel2)}
+  .act .ico{font-size:20px;width:22px;text-align:center;flex:none}
+  .act .body{flex:1;min-width:0}
+  .act .t{font-weight:700;font-size:14px}
+  .act .d{font-size:10px;color:var(--sub);margin-top:1px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+
+  /* overlay */
+  .ov{position:absolute;inset:0;background:rgba(255,240,243,.9);backdrop-filter:blur(6px);
+    display:none;flex-direction:column;justify-content:center;align-items:center;padding:26px;z-index:20;text-align:center}
+  .ov.on{display:flex}
+  .roll{font-size:52px;font-weight:900;letter-spacing:-2px;margin-bottom:4px}
+  .roll.dc{color:var(--bad)} .roll.f{color:#ff9d5f} .roll.s{color:var(--good)} .roll.dg{color:var(--gold)}
+  .delta{font-size:15px;color:var(--sub);line-height:1.7;margin-top:6px}
+  .delta b{color:var(--txt)}
+  .ev-card{background:var(--panel);border:1px solid var(--line);border-radius:20px;padding:22px 20px;width:100%}
+  .ev-emoji{font-size:44px}
+  .ev-title{font-size:19px;font-weight:800;margin:8px 0 6px}
+  .ev-text{font-size:14px;color:var(--sub);line-height:1.6;margin-bottom:16px}
+  .ev-choices{display:grid;gap:9px}
+
+  /* end */
+  #s-end{overflow-y:auto}
+  .endtitle{font-size:14px;color:var(--sub);font-weight:700}
+  .end-idol{text-align:center;margin:8px 0 2px}
+  .end-avatar{width:100px;height:100px;border-radius:50%;object-fit:cover;background:#ffe0e6;
+    border:3px solid var(--accent);box-shadow:0 8px 22px rgba(236,58,92,.24)}
+  .end-idolname{font-weight:800;font-size:18px;margin-top:9px}
+  .end-idolname small{color:var(--sub);font-weight:700;font-size:13px;margin-left:4px}
+  .rank-emoji{font-size:52px;text-align:center;margin:4px 0 0}
+  .endname{font-size:25px;font-weight:900;text-align:center;letter-spacing:-1px;line-height:1.15}
+  .endsub{text-align:center;color:var(--sub);font-size:13px;margin-top:6px;line-height:1.6}
+  #radarWrap{display:flex;justify-content:center;margin:10px 0 4px}
+  #radar{width:290px;height:290px;max-width:88%}
+  .ograde{text-align:center;margin-top:2px;font-size:13px;color:var(--sub)}
+  .ograde b{font-size:20px;color:var(--gold);vertical-align:-2px;margin-left:4px}
+  .lb{background:var(--panel);border:1px solid var(--line);border-radius:16px;overflow:hidden;margin-top:14px}
+  .lb-row{display:flex;align-items:center;gap:10px;padding:11px 14px;border-top:1px solid var(--line);font-size:14px}
+  .lb-row:first-child{border-top:none}
+  .lb-row.me{background:rgba(255,95,162,.14)}
+  .lb-row .r{width:22px;font-weight:800;color:var(--sub)}
+  .lb-row .who{flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .lb-row .who small{color:var(--sub)}
+  .lb-row .sc{font-weight:800;color:var(--gold);font-variant-numeric:tabular-nums}
+  input.name{width:100%;background:var(--panel2);border:1px solid var(--line);border-radius:12px;
+    color:var(--txt);padding:12px 14px;font-size:16px;margin-top:12px}
+  .center{text-align:center}
+  .spacer{flex:1}
+  .toast{position:absolute;top:14px;left:50%;transform:translateX(-50%);background:var(--panel2);
+    border:1px solid var(--line);padding:9px 16px;border-radius:20px;font-size:13px;z-index:30;
+    opacity:0;transition:opacity .3s;pointer-events:none;white-space:nowrap;max-width:90%}
+  .toast.on{opacity:1}
+
+  /* 페이즈 전환 컷씬 */
+  .cutscene{position:fixed;top:0;bottom:0;left:50%;transform:translateX(-50%);width:100%;max-width:480px;
+    z-index:40;display:none;flex-direction:column;
+    align-items:center;justify-content:center;text-align:center;padding:30px;overflow:hidden;
+    background:linear-gradient(165deg,#3a0f1f 0%,#180610 100%)}
+  .cutscene.on{display:flex}
+  .cutscene::before{content:"";position:absolute;top:-40%;left:50%;width:200%;height:150%;
+    transform:translateX(-50%);pointer-events:none;
+    background:conic-gradient(from 0deg at 50% 0%, transparent 0deg, rgba(255,120,150,.16) 22deg, transparent 46deg, rgba(255,140,165,.12) 80deg, transparent 104deg, rgba(255,150,175,.16) 150deg, transparent 180deg);
+    animation:spot 9s linear infinite}
+  @keyframes spot{to{transform:translateX(-50%) rotate(360deg)}}
+  .cs-in{position:relative;z-index:1;display:flex;flex-direction:column;align-items:center;
+    animation:csIn .55s cubic-bezier(.2,.9,.3,1.3) both}
+  @keyframes csIn{from{opacity:0;transform:translateY(28px) scale(.94)}to{opacity:1;transform:none}}
+  .cs-act{color:#ff9db3;font-size:14px;letter-spacing:4px;font-weight:800;margin-bottom:8px}
+  .cs-emoji{font-size:60px;line-height:1;filter:drop-shadow(0 6px 16px rgba(0,0,0,.4))}
+  .cs-title{color:#fff;font-size:33px;font-weight:900;margin:10px 0 4px;letter-spacing:-.5px;
+    text-shadow:0 3px 22px rgba(236,58,92,.55)}
+  .cs-sub{color:#ffc2d0;font-size:15px;font-weight:700;letter-spacing:1px}
+  .cs-talk{display:flex;align-items:flex-end;gap:10px;margin-top:28px;max-width:340px}
+  .cs-mascot{width:72px;height:72px;border-radius:50%;object-fit:cover;flex:none;background:#ffe0e6;
+    border:3px solid #fff;box-shadow:0 6px 16px rgba(0,0,0,.4);animation:bob 1.7s ease-in-out infinite}
+  @keyframes bob{0%,100%{transform:translateY(0)}50%{transform:translateY(-7px)}}
+  .cs-bubble{background:#fff;color:#2b2530;border-radius:16px 16px 16px 4px;padding:12px 15px;
+    font-size:14px;font-weight:700;line-height:1.45;text-align:left;box-shadow:0 8px 20px rgba(0,0,0,.28)}
+  .cs-tap{position:absolute;bottom:26px;left:0;right:0;color:rgba(255,255,255,.6);font-size:13px;
+    z-index:1;animation:blink 1.4s ease-in-out infinite}
+  @keyframes blink{0%,100%{opacity:.4}50%{opacity:.9}}
+
+  /* 결과 집계 로딩 */
+  .loading{position:fixed;top:0;bottom:0;left:50%;transform:translateX(-50%);width:100%;max-width:480px;
+    z-index:45;display:none;flex-direction:column;
+    align-items:center;justify-content:center;text-align:center;
+    background:linear-gradient(165deg,#3a0f1f,#180610)}
+  .loading.on{display:flex}
+  .load-ring{width:66px;height:66px;border-radius:50%;border:6px solid rgba(255,255,255,.15);
+    border-top-color:#ff5f8a;animation:spin .8s linear infinite;margin-bottom:22px}
+  @keyframes spin{to{transform:rotate(360deg)}}
+  .load-txt{color:#fff;font-size:21px;font-weight:900}
+  .load-step{color:#ffc2d0;font-size:14px;font-weight:700;margin-top:12px;min-height:20px;animation:blink 1.2s ease-in-out infinite}
+
+  /* 육성 연출: 훈련 씬 · 게이지·등급 강조 */
+  .train-scene{display:flex;flex-direction:column;align-items:center;margin-bottom:14px}
+  .train-ava{width:104px;height:104px;border-radius:50%;object-fit:cover;background:#ffe0e6;
+    border:4px solid var(--accent);box-shadow:0 10px 26px rgba(236,58,92,.28)}
+  .train-ico{position:relative;margin-top:-22px;font-size:40px;
+    filter:drop-shadow(0 4px 8px rgba(0,0,0,.2));animation:heave .5s ease-in-out infinite}
+  @keyframes heave{0%,100%{transform:translateY(0) rotate(-6deg)}50%{transform:translateY(-10px) rotate(6deg)}}
+  .train-say{margin-top:8px;font-size:14px;font-weight:800;color:var(--accent)}
+  .stat{transition:background .2s;border-radius:9px}
+  .stat.bump{background:rgba(236,58,92,.10);animation:statPulse .7s ease-out}
+  @keyframes statPulse{0%{transform:scale(1)}30%{transform:scale(1.035)}100%{transform:scale(1)}}
+  .gbadge{transition:transform .2s}
+  .gbadge.pop{animation:badgePop .6s cubic-bezier(.3,1.4,.5,1)}
+  @keyframes badgePop{0%{transform:scale(1)}35%{transform:scale(1.7)}100%{transform:scale(1)}}
+  .vgain{position:absolute;font-size:13px;font-weight:900;color:var(--good);
+    pointer-events:none;animation:floatUp 1s ease-out forwards}
+  @keyframes floatUp{0%{opacity:0;transform:translateY(4px)}20%{opacity:1}100%{opacity:0;transform:translateY(-22px)}}
+
+  /* 도트(픽셀) 이펙트 레이어 — 훈련 응원 버디 */
+  .px-stage{position:relative;display:flex;flex-direction:column;align-items:center;margin-bottom:12px;
+    padding:6px 40px 0}
+  .px-chibi{width:104px;height:104px;image-rendering:pixelated;image-rendering:crisp-edges;
+    transform-origin:center bottom}
+  /* 활동별 영차영차 모션 */
+  .fx-sing{animation:fxSing .45s ease-in-out infinite}
+  .fx-dance{animation:fxDance .5s ease-in-out infinite}
+  .fx-pose{animation:fxPose 1s ease-in-out infinite}
+  .fx-charm{animation:fxCharm .6s ease-in-out infinite}
+  .fx-act{animation:fxAct .7s ease-in-out infinite}
+  .fx-create{animation:fxCreate .8s ease-in-out infinite}
+  .fx-rest{animation:fxRest 1.6s ease-in-out infinite}
+  @keyframes fxSing{0%,100%{transform:translateY(0) scale(1,1)}50%{transform:translateY(-8px) scale(1.05,.97)}}
+  @keyframes fxDance{0%{transform:translateX(-9px) rotate(-9deg)}50%{transform:translateX(9px) rotate(9deg) translateY(-7px)}100%{transform:translateX(-9px) rotate(-9deg)}}
+  @keyframes fxPose{0%,100%{transform:scale(1) rotate(-2deg)}50%{transform:scale(1.09) rotate(2deg)}}
+  @keyframes fxCharm{0%,100%{transform:rotate(-11deg) translateY(0)}50%{transform:rotate(11deg) translateY(-5px)}}
+  @keyframes fxAct{0%,100%{transform:translateX(0) scaleX(1)}30%{transform:translateX(-7px) scaleX(1.06)}60%{transform:translateX(7px) scaleX(.95)}}
+  @keyframes fxCreate{0%,100%{transform:translateY(0) rotate(0)}25%{transform:translateY(-5px) rotate(-5deg)}75%{transform:translateY(-5px) rotate(5deg)}}
+  @keyframes fxRest{0%,100%{transform:scale(1,1)}50%{transform:scale(1.03,.96) translateY(3px)}}
+  /* 결과별 마무리 모션 */
+  .rx-jump{animation:rxJump .55s cubic-bezier(.3,1.4,.5,1) 2}
+  .rx-ok{animation:rxOk .4s ease-out 2}
+  .rx-droop{animation:rxDroop .6s ease-out forwards}
+  .rx-fall{animation:rxFall .7s ease-in forwards}
+  @keyframes rxJump{0%{transform:translateY(0) rotate(0)}45%{transform:translateY(-36px) rotate(10deg)}100%{transform:translateY(0)}}
+  @keyframes rxOk{0%,100%{transform:translateY(0)}50%{transform:translateY(-13px)}}
+  @keyframes rxDroop{0%{transform:translateY(0) rotate(0) scale(1)}100%{transform:translateY(7px) rotate(-5deg) scale(.93)}}
+  @keyframes rxFall{0%{transform:translateY(0) rotate(0)}55%{transform:translateY(0) rotate(72deg)}100%{transform:translateY(16px) rotate(90deg)}}
+  .px-floor{width:120px;height:16px;border-radius:50%;margin-top:-8px;
+    background:radial-gradient(rgba(236,58,92,.2),transparent 70%)}
+  .px-note{position:absolute;font-size:22px;color:var(--accent);opacity:0;
+    animation:pxnote 1.2s ease-out infinite}
+  .px-note.n1{left:20%;top:34%;animation-delay:0s}
+  .px-note.n2{right:18%;top:24%;animation-delay:.45s}
+  .px-note.n3{left:32%;top:12%;animation-delay:.85s}
+  @keyframes pxnote{0%{opacity:0;transform:translateY(8px) scale(.8) rotate(-8deg)}
+    25%{opacity:1}100%{opacity:0;transform:translateY(-30px) scale(1.15) rotate(10deg)}}
+  .px-spark{position:absolute;width:9px;height:9px;image-rendering:pixelated;pointer-events:none;border-radius:1px}
+  @keyframes pxfly{0%{opacity:1;transform:translate(0,0) scale(1)}
+    100%{opacity:0;transform:translate(var(--dx),var(--dy)) scale(.3)}}
+
+  /* 성장 서사 로그 */
+  .growth{background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:12px 14px;
+    margin-top:14px;text-align:left;box-shadow:0 4px 14px rgba(236,58,92,.08)}
+  .growth h3{font-size:14px;margin:0 0 8px;color:var(--accent)}
+  .growth .gl{font-size:12.5px;color:var(--sub);line-height:1.7;padding:3px 0;border-top:1px dashed var(--line)}
+  .growth .gl:first-of-type{border-top:none}
+  .growth .gl b{color:var(--txt)}
+</style>
+
+<div id="app">
+  <div class="toast" id="toast"></div>
+
+  <!-- TITLE -->
+  <section class="screen on" id="s-title">
+    <div class="spacer"></div>
+    <img id="titleMascot" src="assets/mascot.png" alt="">
+    <img id="logo" src="assets/logo.png" alt="최애돌">
+    <h1 class="center" style="font-size:21px;margin-top:12px">아이돌 육성 타이쿤</h1>
+    <p class="muted center" style="margin-top:9px">
+      최애를 데뷔시키고 세계로.<br>30주 동안 6가지 재능을 키워<br>어떤 슈퍼스타가 되는지 겨뤄봐.</p>
+    <div class="spacer"></div>
+    <button class="btn" onclick="Game.goSelect()">최애 고르기 →</button>
+    <button class="btn ghost" style="margin-top:9px" onclick="Game.showBoard()">🏆 명예의 전당</button>
+    <div class="spacer"></div>
+  </section>
+
+  <!-- SELECT -->
+  <section class="screen" id="s-select">
+    <h2>누구를 키울까?</h2>
+    <div class="segtab">
+      <button class="seg on" id="seg-search" onclick="Game.mode('search')">🔍 아이돌 검색</button>
+      <button class="seg" id="seg-custom" onclick="Game.mode('custom')">✏️ 커스텀</button>
+    </div>
+
+    <div id="mode-search" class="modebox">
+      <input class="srch" id="idolSearch" placeholder="이름·그룹 검색 (예: 리사, BTS)" oninput="Game.search()" autocomplete="off">
+      <div class="grid" id="idolGrid"></div>
+    </div>
+
+    <div id="mode-custom" class="modebox" style="display:none">
+      <label class="uploader" id="uploader">
+        <input type="file" accept="image/*" id="customFile" onchange="Game.customPhoto(event)" hidden>
+        <span id="upPh">📷<br><small>사진 올리기 (선택)</small></span>
+      </label>
+      <input class="srch" id="customName" placeholder="아이돌 이름 (최대 10자)" maxlength="10" oninput="Game.customValidate()" autocomplete="off">
+      <p class="muted" style="margin:2px 0 7px">타고난 특기를 골라</p>
+      <div class="specpick" id="specPick"></div>
+    </div>
+
+    <button class="btn startfab hide" id="startBtn" disabled onclick="Game.start()">육성 시작 →</button>
+  </section>
+
+  <!-- PLAY -->
+  <section class="screen" id="s-play">
+    <div class="top">
+      <div class="avatar" id="pAvatar"></div>
+      <div class="meta">
+        <div class="nm" id="pName">—</div>
+        <span class="chip" id="pChip">—</span>
+      </div>
+      <div class="fans"><b id="pFans">0</b><span>FANS</span></div>
+    </div>
+
+    <div class="actbar">
+      <span class="week" id="pWeek">WEEK 1 / 30</span>
+      <span class="actbanner" id="pAct">Road to Debut</span>
+    </div>
+
+    <div class="cond">
+      <div class="barlbl"><span>컨디션</span><b id="condTxt">100</b></div>
+      <div class="bar"><i id="condBar" style="width:100%;background:var(--good)"></i></div>
+    </div>
+
+    <div class="stats" id="statBox"></div>
+    <div class="actions" id="actionBox"></div>
+  </section>
+
+  <!-- END -->
+  <section class="screen" id="s-end">
+    <div class="spacer"></div>
+    <div class="endtitle center" id="endStage">—</div>
+    <div class="end-idol" id="endIdolBox">
+      <img class="end-avatar" id="endAvatar" src="" alt="">
+      <div class="end-idolname" id="endIdolName">—</div>
+    </div>
+    <div class="rank-emoji" id="endEmoji">🌟</div>
+    <div class="endname" id="endName">—</div>
+    <div class="endsub" id="endSub">—</div>
+    <div id="radarWrap"><canvas id="radar" width="580" height="580"></canvas></div>
+    <div class="ograde" id="oGrade"></div>
+    <div class="growth" id="growthBox" style="display:none"></div>
+    <button class="btn" id="shareBtn" style="margin-top:14px" onclick="Game.shareCard()">📸 결과 카드 저장 · 공유</button>
+    <input class="name" id="nameInput" placeholder="이름을 남겨봐 (리더보드)" maxlength="10">
+    <button class="btn ghost" id="saveBtn" style="margin-top:9px" onclick="Game.saveScore()">🏆 명예의 전당 등록</button>
+    <div class="lb" id="lbBox"></div>
+    <button class="btn ghost" id="againBtn" style="margin-top:12px" onclick="Game.reset()">홈으로</button>
+    <div class="spacer"></div>
+  </section>
+
+  <div class="ov" id="ov"></div>
+  <div class="cutscene" id="cutscene"></div>
+  <div class="loading" id="loading"></div>
+</div>
+
+<script src="idols.js"></script>
+<script>
+// 검색용 아이돌: idols.js의 window.IDOL_DB (최애돌 실데이터 상위 250명). 로드 실패 시 빈 배열.
+const IDOLS = window.IDOL_DB || [];
+
+// 6대 능력치 (육각형)
+const STATS = [
+  {k:"vocal",   n:"보컬",       ico:"🎵", c:"#ff7ab8"},
+  {k:"dance",   n:"댄스",       ico:"💃", c:"#5fc9ff"},
+  {k:"visual",  n:"비주얼",     ico:"✨", c:"#ffca5f"},
+  {k:"charm",   n:"끼",         ico:"🎭", c:"#a97bff"},
+  {k:"acting",  n:"연기",       ico:"🎬", c:"#ff8a6b"},
+  {k:"creative",n:"크리에이티브",ico:"🎼", c:"#4fe0c0"},
+];
+const MENTAL = {k:"mental", n:"멘탈", ico:"🧠", c:"#9aa6c9"};
+
+// 등급 F ~ SS
+function grade(v){
+  if(v>=88) return "SS";
+  if(v>=75) return "S";
+  if(v>=62) return "A";
+  if(v>=48) return "B";
+  if(v>=34) return "C";
+  if(v>=20) return "D";
+  if(v>=8)  return "E";
+  return "F";
+}
+const GRADE_COLOR={SS:"#ffd35c",S:"#ff5fa2",A:"#c48bff",B:"#5fc9ff",C:"#4fd6a0",D:"#8f9bbf",E:"#77809e",F:"#606784"};
+
+// 타고난 재능 (특기 기반 — 검색·커스텀 공통)
+function talentOf(spec){
+  const keys = STATS.map(s=>s.k);
+  if(!keys.includes(spec)) spec=keys[0];
+  const base = {}; keys.forEach(k=>base[k]=10);
+  base.mental=38;
+  base[spec] += 10;                                   // 특기
+  const si=keys.indexOf(spec);
+  base[keys[(si+3)%keys.length]] += 4;                // 준특기(맞은편)
+  return {base, spec};
+}
+
+const TRAININGS = [
+  {k:"vocal",   ico:"🎵", t:"보컬 레슨",   d:"발성·음정"},
+  {k:"dance",   ico:"💃", t:"댄스 연습",   d:"안무·체력"},
+  {k:"visual",  ico:"✨", t:"비주얼 관리", d:"스타일링"},
+  {k:"charm",   ico:"🎭", t:"예능 도전",   d:"끼·화술"},
+  {k:"acting",  ico:"🎬", t:"연기 학원",   d:"발연기 탈출"},
+  {k:"creative",ico:"🎼", t:"작업실",      d:"작사·작곡"},
+];
+const REST = {k:"rest", ico:"😴", t:"휴식", d:"컨디션 회복 + 멘탈 ↑"};
+
+// 훈련 도트 연출: 활동별 동작(영차영차) + 결과별 마무리
+const TRAIN_FX = {
+  vocal:   {motion:"fx-sing",   notes:["♪","♫","🎵"], word:"노래 연습 중"},
+  dance:   {motion:"fx-dance",  notes:["✨","💫","✨"], word:"춤 연습 중"},
+  visual:  {motion:"fx-pose",   notes:["✨","💖","✨"], word:"비주얼 가꾸는 중"},
+  charm:   {motion:"fx-charm",  notes:["💕","⭐","💕"], word:"끼 발산 중"},
+  acting:  {motion:"fx-act",    notes:["❗","💬","❗"], word:"연기 연습 중"},
+  creative:{motion:"fx-create", notes:["🎶","💡","🎶"], word:"작업 중"},
+  rest:    {motion:"fx-rest",   notes:["💤","💤","💤"], word:"휴식 중"},
+};
+const RESULT_FX = {
+  dbad: {motion:"rx-fall",  burst:"debris"},
+  fail: {motion:"rx-droop", burst:"none"},
+  ok:   {motion:"rx-ok",    burst:"small"},
+  great:{motion:"rx-jump",  burst:"party"},
+};
+
+function rollJudge(cond, mental){
+  let pGreat = 0.12 + cond/400;
+  let pFail  = 0.30 - cond/250 - mental/1500;
+  let pDbad  = 0.14 - cond/500 - mental/900;
+  pFail = Math.max(0.04, pFail);
+  pDbad = Math.max(0.015, pDbad);
+  const r = Math.random();
+  if(r < pDbad) return "dbad";
+  if(r < pDbad + pFail) return "fail";
+  if(r > 1 - pGreat) return "great";
+  return "ok";
+}
+const JUDGE = {
+  dbad:{cls:"dc", label:"대실패…", emoji:"💥", mult:-0.6, cond:-24, fanMult:0.2},
+  fail:{cls:"f",  label:"실패",    emoji:"😥", mult:0.25, cond:-14, fanMult:0.4},
+  ok:  {cls:"s",  label:"성공!",   emoji:"👍", mult:1.0,  cond:-9,  fanMult:1.0},
+  great:{cls:"dg",label:"대성공!!",emoji:"🔥", mult:2.1,  cond:-4,  fanMult:2.3},
+};
+
+// 성장곡선(우하향, 등급 대비 극적): F~C 쭉쭉 → A부터 뻑뻑 → S~SS 기어가듯.
+// 낮을 땐 금방, 만점 갈수록 죽어라 안 오름(공부 0→50은 쉽고 만점은 어려운 논리).
+function growthMult(v){
+  let m;
+  if(v < 55) m = 1.45 - v*0.010;      //  0:1.45 → 30:1.15 → 55:0.90   (F~C 쭉쭉)
+  else       m = 0.90 - (v-55)*0.017; // 55:0.90 → 75:0.56 → 88:0.34 → 100:0.14  (A→S→SS 급감속)
+  return Math.max(0.10, m);
+}
+
+// 선택지 두 종류:
+//  · 확정형: {t, fx}                       → 고르면 바로 적용
+//  · 분기형: {t, odds:s=>p, win:{...}, lose:{...}}  → 주사위로 성공/실패 갈림 (스탯·컨디션 높을수록 성공↑)
+const EVENTS = [
+  // ── 분기형 (도전·리스크) ──
+  {emoji:"📺", title:"예능 대박 각?", text:"인기 예능 고정 자리가 걸린 파일럿. 잘 살리면 화제성 폭발, 삐끗하면 편집 굴욕.",
+   choices:[
+     {t:"끼 발산하며 올인", odds:s=>0.40+s.charm/200+s.cond/500,
+       win:{label:"예능 캐 각인!",emoji:"🤩",desc:"끼 <b>+9</b> · 팬 <b>대폭↑</b> · 컨디션 <b>-10</b>",
+            fx:s=>{s.charm+=9;s.fans+=Math.round(700+s.charm*22);s.cond-=10;}},
+       lose:{label:"통편집…",emoji:"✂️",desc:"멘탈 <b>-7</b> · 컨디션 <b>-8</b> · 팬 소폭",
+            fx:s=>{s.mental-=7;s.cond-=8;s.fans+=90;}}},
+     {t:"연습에 집중 (멘탈 +6)", fx:s=>{s.mental+=6;}},
+   ]},
+  {emoji:"🎬", title:"드라마 조연 캐스팅", text:"연기돌로 갈 기회. 근데 발연기 논란 나면 이미지 타격이 커.",
+   choices:[
+     {t:"연기 도전", odds:s=>0.35+s.acting/160+s.mental/500,
+       win:{label:"인생 조연!",emoji:"🎬",desc:"연기 <b>+11</b> · 팬 <b>↑↑</b> · 컨디션 <b>-12</b>",
+            fx:s=>{s.acting+=11;s.fans+=Math.round(600);s.cond-=12;}},
+       lose:{label:"발연기 논란",emoji:"😬",desc:"연기 <b>+4</b> · 멘탈 <b>-6</b> · 팬 <b>↓</b>",
+            fx:s=>{s.acting+=4;s.mental-=6;s.fans=Math.round(s.fans*0.96);}}},
+     {t:"음악에 집중 (보컬 +5)", fx:s=>{s.vocal+=5;}},
+   ]},
+  {emoji:"📹", title:"편집 없는 生라이브", text:"실시간 소통 라이브 제안. 날것 그대로라 리스크가 커.",
+   choices:[
+     {t:"생방송 강행", odds:s=>0.45+s.charm/220+s.mental/500,
+       win:{label:"라이브 레전드!",emoji:"🎥",desc:"끼 <b>+7</b> · 팬 <b>대폭↑</b>",
+            fx:s=>{s.charm+=7;s.fans+=Math.round(650+s.charm*15);s.cond-=6;}},
+       lose:{label:"방송사고…",emoji:"📵",desc:"멘탈 <b>-8</b> · 컨디션 <b>-6</b>",
+            fx:s=>{s.mental-=8;s.cond-=6;s.fans+=60;}}},
+     {t:"녹화로 안전하게 (끼 +3)", fx:s=>{s.charm+=3;}},
+   ]},
+  {emoji:"🕺", title:"챌린지 열풍", text:"네 안무 클립이 SNS에서 도는 중. 챌린지 유행을 노려볼까?",
+   choices:[
+     {t:"댄스 챌린지 점화", odds:s=>0.42+s.dance/200+s.visual/600,
+       win:{label:"떡상 챌린지!",emoji:"🔥",desc:"댄스 <b>+8</b> · 팬 <b>폭발↑</b>",
+            fx:s=>{s.dance+=8;s.fans+=Math.round(900+s.dance*18);}},
+       lose:{label:"묻힘…",emoji:"🥲",desc:"댄스 <b>+3</b> · 팬 소폭",
+            fx:s=>{s.dance+=3;s.fans+=120;}}},
+     {t:"완성도 더 높이기 (댄스 +5)", fx:s=>{s.dance+=5;}},
+   ]},
+  {emoji:"💄", title:"명품 브랜드 CF", text:"글로벌 브랜드 광고 제안. 비주얼 승부라 부담도 커.",
+   choices:[
+     {t:"메인 모델 도전", odds:s=>0.38+s.visual/180+s.charm/600,
+       win:{label:"브랜드 뮤즈!",emoji:"👑",desc:"비주얼 <b>+9</b> · 팬 <b>↑↑</b>",
+            fx:s=>{s.visual+=9;s.fans+=Math.round(800);}},
+       lose:{label:"이미지 안 맞음",emoji:"🫤",desc:"비주얼 <b>+3</b> · 멘탈 <b>-4</b>",
+            fx:s=>{s.visual+=3;s.mental-=4;}}},
+     {t:"내실부터 다지기 (비주얼 +4)", fx:s=>{s.visual+=4;}},
+   ]},
+  {emoji:"🎙️", title:"서바이벌 프로 출연", text:"경연 프로에서 실력 검증 무대. 이기면 급상승, 지면 굴욕.",
+   choices:[
+     {t:"경연 참가", odds:s=>0.30+(s.vocal+s.dance)/400+s.cond/500,
+       win:{label:"올킬 무대!",emoji:"🏅",desc:"보컬·댄스 <b>+6</b> · 팬 <b>대폭↑</b>",
+            fx:s=>{s.vocal+=6;s.dance+=6;s.fans+=Math.round(1000);s.cond-=10;}},
+       lose:{label:"탈락…",emoji:"💧",desc:"멘탈 <b>-9</b> · 컨디션 <b>-8</b>",
+            fx:s=>{s.mental-=9;s.cond-=8;s.fans+=100;}}},
+     {t:"기권하고 컨디션 관리 (컨디션 +12)", fx:s=>{s.cond=Math.min(100,s.cond+12);}},
+   ]},
+  {emoji:"💞", title:"열애설 보도", text:"근거 약한 열애설이 터졌어. 대응이 관건이야.",
+   choices:[
+     {t:"쿨하게 정면 대응", odds:s=>0.50+s.mental/300,
+       win:{label:"대인배 인정!",emoji:"😎",desc:"멘탈 <b>+5</b> · 팬 <b>↑</b>",
+            fx:s=>{s.mental+=5;s.fans+=Math.round(400);}},
+       lose:{label:"논란 확산",emoji:"🌪️",desc:"멘탈 <b>-8</b> · 팬 <b>↓</b>",
+            fx:s=>{s.mental-=8;s.fans=Math.round(s.fans*0.94);}}},
+     {t:"소속사에 맡기고 잠수 (컨디션 +10)", fx:s=>{s.cond=Math.min(100,s.cond+10);}},
+   ]},
+  // ── 확정형 (트레이드오프·회복) ──
+  {emoji:"🎁", title:"열성팬의 서포트", text:"팬들이 자발적으로 지하철·버스 광고를 걸어줬어!",
+   choices:[
+     {t:"고맙게 화답 (팬 대폭 ↑)", fx:s=>{s.fans+=Math.round(500+s.fans*0.05);}},
+   ]},
+  {emoji:"🎼", title:"자작곡 떡밥", text:"작업하던 데모 반응이 좋아. 자컨·자작곡 아티스트로?",
+   choices:[
+     {t:"공개한다 (크리에이티브 +8, 팬 ↑)", fx:s=>{s.creative+=8;s.fans+=Math.round(350);}},
+     {t:"더 다듬는다 (멘탈 +5)", fx:s=>{s.mental+=5;}},
+   ]},
+  {emoji:"🤕", title:"연습 중 부상", text:"무리한 안무로 발목을 삐끗했어.",
+   choices:[
+     {t:"쉬어간다 (컨디션 +20)", fx:s=>{s.cond=Math.min(100,s.cond+20);}},
+     {t:"참고 강행 (댄스 +6, 컨디션 -18)", fx:s=>{s.dance+=6;s.cond-=18;}},
+   ]},
+  {emoji:"🧧", title:"팬사인회", text:"오프라인에서 팬들을 직접 만나는 날. 소통으로 팬심을 다져.",
+   choices:[
+     {t:"한 명 한 명 눈맞춤 (팬 ↑, 멘탈 +3)", fx:s=>{s.fans+=Math.round(350+s.fans*0.03);s.mental+=3;}},
+   ]},
+  {emoji:"🛌", title:"번아웃 경보", text:"쉼 없이 달렸더니 몸이 보내는 신호가 왔어.",
+   choices:[
+     {t:"과감히 휴가 (컨디션 +26, 멘탈 +5)", fx:s=>{s.cond=Math.min(100,s.cond+26);s.mental+=5;}},
+     {t:"그래도 스케줄 소화 (모든 스탯 +2, 컨디션 -12)", fx:s=>{STATS.forEach(x=>s[x.k]+=2);s.cond-=12;}},
+   ]},
+  {emoji:"🌐", title:"해외 팬미팅 투어", text:"글로벌 팬덤이 커지는 중. 해외 일정을 잡을까?",
+   choices:[
+     {t:"강행군 (비주얼·끼 +4, 컨디션 -16, 팬 ↑↑)", fx:s=>{s.visual+=4;s.charm+=4;s.cond-=16;s.fans+=700;}},
+     {t:"국내 집중 (팬 +안정)", fx:s=>{s.fans+=250;}},
+   ]},
+];
+
+// ===== 경쟁(필수 이벤트) — 라이벌과 순위 대결 =====
+const RIVAL_POOL  = ["스텔라","네온사인","루나틱스","블랙로즈","아이리스","프리즘","코스모스","벨벳나잇","하이퍼노바","오로라"];
+const RIVAL_EMOJI = ["💫","⚡","🌙","🥀","🌸","🔮","🌌","🖤","✴️","🌠"];
+// type: stage(무대 퍼포먼스=보컬·댄스·비주얼·끼) / award(시상식=종합력+팬)
+// base: 라이벌 기대 파워 기준선(주차 진행에 따라 상승). gate: 실패시 탈락 관문. final: 최종.
+const COMPETS = {
+  15:{type:"stage", emoji:"📺", title:"첫 음악방송 1위 도전",  field:["vocal","dance","visual","charm"], base:33},
+  20:{type:"award", emoji:"🏆", title:"국내 연말 가요대상",     base:44, gate:true},
+  25:{type:"stage", emoji:"🌍", title:"글로벌 뮤직쇼 1위 도전", field:["vocal","dance","visual","charm"], base:52},
+  30:{type:"award", emoji:"👑", title:"글로벌 뮤직 어워드 · 대상", base:62, final:true},
+};
+
+const Game = {
+  st:null, lastResult:null, selIdol:null, curMode:"search", customSpec:null, customImg:null,
+
+  goSelect(){
+    this.selIdol=null; this.customImg=null; this.customSpec=null;
+    this.renderSpecPick();
+    document.getElementById("idolSearch").value="";
+    document.getElementById("customName").value="";
+    document.getElementById("uploader").style.backgroundImage="none";
+    document.getElementById("upPh").style.display="";
+    this.mode("search");
+    this.search();
+    show("s-select");
+  },
+  mode(m){
+    this.curMode=m; this.selIdol=null;
+    document.getElementById("seg-search").classList.toggle("on", m==="search");
+    document.getElementById("seg-custom").classList.toggle("on", m==="custom");
+    document.getElementById("mode-search").style.display = m==="search"?"":"none";
+    document.getElementById("mode-custom").style.display  = m==="custom"?"":"none";
+    document.querySelectorAll("#idolGrid .card.sel").forEach(c=>c.classList.remove("sel"));
+    this.updateStartFab();
+  },
+  search(){
+    const q=(document.getElementById("idolSearch").value||"").trim().toLowerCase();
+    let list = q ? IDOLS.filter(i=> (i.name||"").toLowerCase().includes(q) || (i.grp||"").toLowerCase().includes(q) || (i.en||"").includes(q)) : IDOLS;
+    list = list.slice(0,60);
+    const grid=document.getElementById("idolGrid");
+    if(!list.length){ grid.innerHTML=`<p class="muted" style="grid-column:1/-1;text-align:center;padding:24px">검색 결과가 없어. 다른 이름으로 찾아봐.</p>`; return; }
+    grid.innerHTML = list.map(i=>{
+      return `<div class="card" data-id="${i.id}" onclick="Game.pick(${i.id})">
+        <span class="ph" style="background-image:url('${i.img}')"></span>
+        <div class="nm">${esc(i.name)}</div>
+        <div class="gp">${esc(i.grp)}</div>
+      </div>`;}).join("");
+  },
+  pick(id){
+    this.selIdol = IDOLS.find(i=>i.id===id) || null;
+    document.querySelectorAll("#idolGrid .card").forEach(c=>c.classList.toggle("sel", +c.dataset.id===id));
+    this.updateStartFab();
+  },
+  renderSpecPick(){
+    document.getElementById("specPick").innerHTML = STATS.map(s=>
+      `<button class="sp" data-k="${s.k}" onclick="Game.pickSpec('${s.k}')">
+        <span class="spico">${s.ico}</span>${s.n}</button>`).join("");
+  },
+  pickSpec(k){
+    this.customSpec=k;
+    document.querySelectorAll("#specPick .sp").forEach(b=>b.classList.toggle("on", b.dataset.k===k));
+    this.customValidate();
+  },
+  customPhoto(ev){
+    const f=ev.target.files && ev.target.files[0]; if(!f) return;
+    const rd=new FileReader();
+    rd.onload=e=>{ const img=new Image();
+      img.onload=()=>{ const S=256, cv=document.createElement("canvas"); cv.width=S; cv.height=S;
+        const x=cv.getContext("2d"), m=Math.min(img.width,img.height);
+        x.drawImage(img,(img.width-m)/2,(img.height-m)/2,m,m,0,0,S,S);
+        this.customImg=cv.toDataURL("image/jpeg",0.85);
+        const up=document.getElementById("uploader");
+        up.style.backgroundImage=`url('${this.customImg}')`;
+        document.getElementById("upPh").style.display="none";
+      };
+      img.src=e.target.result;
+    };
+    rd.readAsDataURL(f);
+  },
+  customValidate(){ this.updateStartFab(); },
+  // 플로팅 시작 버튼: 선택되면 하단에 떠오르고, 선택된 이름 표시
+  updateStartFab(){
+    const btn=document.getElementById("startBtn");
+    const ready = this.curMode==="custom"
+      ? !!((document.getElementById("customName").value||"").trim() && this.customSpec)
+      : !!this.selIdol;
+    btn.disabled=!ready;
+    btn.classList.toggle("hide", !ready);
+    if(ready){
+      const nm = this.curMode==="custom"
+        ? ((document.getElementById("customName").value||"내 아이돌").trim()||"내 아이돌")
+        : this.selIdol.name;
+      btn.textContent=`${nm} 육성 시작 →`;
+    } else btn.textContent="육성 시작 →";
+  },
+  start(){
+    let idol;
+    if(this.curMode==="custom"){
+      const nm=(document.getElementById("customName").value||"내 아이돌").trim().slice(0,10) || "내 아이돌";
+      if(!this.customSpec) return;
+      idol={id:"custom", name:nm, grp:"커스텀 아이돌", spec:this.customSpec, img:this.customImg||""};
+    } else {
+      idol=this.selIdol; if(!idol) return;
+    }
+    const {base} = talentOf(idol.spec);
+    this.st = {idol, ...base, cond:100, fans:0, week:1, busy:false, log:[]};
+    this.logWeek(`<b>${esc(idol.name)}</b> 데뷔 프로젝트 시작 — 함께 월드스타를 향해!`);
+    this.cutscene({act:"ACT 1", emoji:"🎬", title:"데뷔를 향해", sub:"ROAD TO DEBUT",
+      talk:`${idol.name}, 데뷔 준비 시작! 30주 동안 키워서 월드스타로 만들어보자 🔥`},
+      ()=>{ show("s-play"); this.render(); toast(`${idol.name} 육성 시작!`); });
+  },
+  actName(w){ return w<=10?"Road to Debut":w<=20?"Domestic Market":"Road to World"; },
+
+  render(){
+    const s=this.st, idol=s.idol;
+    const av=document.getElementById("pAvatar");
+    if(idol.img){ av.style.backgroundImage=`url('${idol.img}')`; av.textContent=""; }
+    else { av.style.backgroundImage="none"; av.textContent="🎤"; }
+    document.getElementById("pName").textContent=idol.name;
+    document.getElementById("pChip").textContent=idol.grp;
+    document.getElementById("pFans").textContent=fmt(s.fans);
+    document.getElementById("pWeek").textContent=`WEEK ${s.week} / 30`;
+    document.getElementById("pAct").textContent=this.actName(s.week);
+    const cb=document.getElementById("condBar");
+    cb.style.width=Math.max(0,s.cond)+"%";
+    cb.style.background = s.cond>55?"var(--good)":s.cond>25?"var(--visual)":"var(--bad)";
+    document.getElementById("condTxt").textContent=Math.max(0,Math.round(s.cond));
+    document.getElementById("statBox").innerHTML=[...STATS,MENTAL].map(st=>{
+      const v=Math.round(s[st.k]); const g=grade(v);
+      const badge = st.k==="mental" ? "" :
+        `<span class="gbadge" style="background:${GRADE_COLOR[g]}">${g}</span>`;
+      return `<div class="stat" data-k="${st.k}"><span class="k">${st.ico} ${st.n}</span>
+        <span class="bar"><i style="width:${Math.min(100,v)}%;background:${st.c}"></i></span>
+        <span class="v">${v}</span>${badge}</div>`;
+    }).join("");
+    document.getElementById("actionBox").innerHTML=
+      `<div class="agrid">${TRAININGS.map(t=>`
+        <button class="act" onclick="Game.train('${t.k}')">
+          <span class="ico">${t.ico}</span>
+          <span class="body"><span class="t">${t.t}</span><span class="d">${t.d}</span></span>
+        </button>`).join("")}</div>
+      <button class="act rest" onclick="Game.train('rest')">
+        <span class="ico">${REST.ico}</span>
+        <span class="body"><span class="t">${REST.t}</span><span class="d">${REST.d}</span></span>
+      </button>`;
+  },
+
+  train(kind){
+    const s=this.st; if(s.busy) return; s.busy=true;
+    if(kind==="rest"){
+      const gain=26+Math.round(Math.random()*14);
+      s.cond=Math.min(100,s.cond+gain); s.mental+=3;
+      this.trainReveal(s.idol, "rest", "ok", {cls:"s",label:"휴식 😌",emoji:"😌"},
+        `컨디션 <b>+${gain}</b> · 멘탈 <b>+3</b>`, "푹 쉬자~ 😌",
+        ()=>{ this.render(); this.afterTurn(); });
+      return;
+    }
+    const j=rollJudge(s.cond,s.mental), J=JUDGE[j];
+    const stat=STATS.find(x=>x.k===kind);
+    const baseGain=6+Math.round(Math.random()*3);
+    // 히든 특기 가점: 타고난 특기 훈련이 더 잘 자람 (준특기는 소폭). UI엔 안 보임.
+    const keys=STATS.map(x=>x.k), si=keys.indexOf(s.idol.spec);
+    const talent = kind===s.idol.spec ? 1.2 : (kind===keys[(si+3)%keys.length] ? 1.1 : 1.0);
+    let gain = J.mult>0 ? Math.round(baseGain*J.mult*growthMult(s[kind])*talent)
+                        : Math.round(baseGain*J.mult);
+    const oldV=Math.round(s[kind]), oldG=grade(oldV);
+    s[kind]=Math.max(0,s[kind]+gain);
+    s.cond=Math.max(0,s.cond+J.cond);
+    if(j==="dbad") s.mental=Math.max(0,s.mental-6);
+    const fanGain=Math.round((30+s[kind]*3)*J.fanMult);
+    s.fans+=fanGain;
+    const newV=Math.round(s[kind]), newG=grade(newV);
+    const sign=gain>=0?"+":"";
+    const gradeUp = newG!==oldG && newV>oldV;
+    if(gradeUp) this.logWeek(`${stat.ico} <b>${stat.n}</b>가 <b style="color:var(--accent)">${oldG}→${newG}</b> 등급으로 올랐어!`);
+    const say={dbad:"으악, 망했다…😵",fail:"아쉬워…😥",ok:"좋았어! 👍",great:"완전 대박이야!! 🔥"}[j]||"";
+    this.trainReveal(s.idol, kind, j, J,
+      `${stat.ico} ${stat.n} <b>${sign}${gain}</b><br>팬 <b>+${fmt(fanGain)}</b> · 컨디션 <b>${J.cond}</b>`,
+      say,
+      ()=>{ this.render(); this.bumpStat(kind, oldV, newV, oldG, newG);
+            setTimeout(()=>this.afterTurn(), 900); });
+  },
+
+  // 훈련 씬: 활동 동작(영차영차) → 결과 마무리 (성별·활동·결과별 도트 연출)
+  trainReveal(idol, kind, jkey, J, deltaHtml, say, done){
+    const ov=document.getElementById("ov");
+    ov.className="ov on"; ov.onclick=null;
+    const sex = (idol && idol.cat==="M") ? "m" : "f";
+    const fx = TRAIN_FX[kind] || TRAIN_FX.vocal;
+    const R  = RESULT_FX[jkey] || RESULT_FX.ok;
+    // ── Phase 1: 영차영차 (활동 동작) ──
+    ov.innerHTML=`<div class="px-stage" id="pxStage">
+        <span class="px-note n1">${fx.notes[0]}</span>
+        <span class="px-note n2">${fx.notes[1]}</span>
+        <span class="px-note n3">${fx.notes[2]}</span>
+        <img class="px-chibi ${fx.motion}" id="pxChibi" src="assets/pixel/${sex}0.png" alt="">
+        <div class="px-floor"></div>
+        <div class="train-say" id="pxSay">${fx.word}…</div>
+      </div>`;
+    const chibi=document.getElementById('pxChibi'); let f=0;
+    clearInterval(this._pxTimer);
+    this._pxTimer=setInterval(()=>{ f^=1; chibi.src=`assets/pixel/${sex}${f}.png`; }, 220);
+    // ── Phase 2: 결과 마무리 (1.1초 뒤) ──
+    clearTimeout(this._pxPhase);
+    this._pxPhase=setTimeout(()=>{
+      clearInterval(this._pxTimer);                 // 프레임 스왑 멈추고 결과 포즈 고정
+      chibi.src=`assets/pixel/${sex}1.png`;
+      chibi.className=`px-chibi ${R.motion}`;        // 활동 → 결과 모션 전환
+      if(R.burst==="party") this.pxSparkle(ov,18,null,false);
+      else if(R.burst==="small") this.pxSparkle(ov,7,['#4fd6a0','#5fc9ff','#ffd35c'],false);
+      else if(R.burst==="debris") this.pxSparkle(ov,6,['#9a8f9a','#c9b9bf','#8a92ad'],true);
+      const sayEl=document.getElementById('pxSay');
+      if(sayEl){ sayEl.textContent=say||""; sayEl.style.color="var(--txt)"; }
+      const info=document.createElement('div');
+      info.innerHTML=`<div class="roll ${J.cls}">${J.emoji}</div>
+        <div class="roll ${J.cls}" style="font-size:28px">${J.label}</div>
+        <div class="delta">${deltaHtml}</div>`;
+      ov.appendChild(info);
+      setTimeout(()=>{ ov.onclick=()=>{ clearInterval(this._pxTimer); clearTimeout(this._pxPhase);
+          ov.className="ov"; ov.onclick=null; done(); };
+        const h=document.createElement("div");h.className="muted";h.style.marginTop="12px";
+        h.textContent="탭해서 계속";ov.appendChild(h);
+      }, 450);
+    }, 1100);
+  },
+  pxSparkle(container, count, colors, down){
+    const stage=container.querySelector('.px-stage'); if(!stage) return;
+    const pal=colors||['#ff5f8a','#ffd35c','#5fc9ff','#8b5cff','#4fd6a0','#ec3a5c'];
+    for(let i=0;i<(count||16);i++){
+      const s=document.createElement('div'); s.className='px-spark';
+      const ang=Math.random()*6.283, dist=42+Math.random()*66;
+      const dy = down ? Math.abs(Math.sin(ang))*dist+18 : Math.sin(ang)*dist;
+      s.style.background=pal[i%pal.length];
+      s.style.left='50%'; s.style.top='40%';
+      s.style.setProperty('--dx',(Math.cos(ang)*dist).toFixed(0)+'px');
+      s.style.setProperty('--dy',(dy).toFixed(0)+'px');
+      s.style.animation='pxfly .85s ease-out forwards';
+      stage.appendChild(s); setTimeout(()=>s.remove(), 950);
+    }
+  },
+
+  // 게이지 채우기 + 숫자 카운트업 + 등급 상승 팝 (시각 강조)
+  bumpStat(kind, oldV, newV, oldG, newG){
+    const box=document.getElementById("statBox");
+    const row=box && box.querySelector(`.stat[data-k="${kind}"]`);
+    if(!row) return;
+    const bar=row.querySelector('.bar > i'), numEl=row.querySelector('.v'), badge=row.querySelector('.gbadge');
+    if(bar){ bar.style.transition='none'; bar.style.width=Math.min(100,oldV)+'%';
+      void bar.offsetWidth;
+      bar.style.transition='width .7s cubic-bezier(.3,.8,.4,1)';
+      bar.style.width=Math.min(100,newV)+'%'; }
+    if(numEl) countUp(numEl, oldV, newV, 700);
+    row.classList.remove('bump'); void row.offsetWidth; row.classList.add('bump');
+    setTimeout(()=>row.classList.remove('bump'), 760);
+    if(badge && newG!==oldG){ setTimeout(()=>{ badge.classList.add('pop');
+      setTimeout(()=>badge.classList.remove('pop'), 700); }, 420); }
+  },
+
+  logWeek(html){ if(!this.st.log) this.st.log=[]; this.st.log.push(`<b>W${this.st.week}</b> · ${html}`); },
+
+  showRoll(J, deltaHtml, done){
+    const ov=document.getElementById("ov");
+    ov.className="ov on";
+    ov.innerHTML=`<div class="roll ${J.cls}">${J.emoji}</div>
+      <div class="roll ${J.cls}" style="font-size:30px">${J.label}</div>
+      <div class="delta">${deltaHtml}</div>`;
+    ov.onclick=null;
+    setTimeout(()=>{ ov.onclick=()=>{ov.className="ov";ov.onclick=null;done();};
+      const h=document.createElement("div");h.className="muted";h.style.marginTop="18px";
+      h.textContent="탭해서 계속";ov.appendChild(h);
+    },600);
+  },
+
+  afterTurn(){
+    const s=this.st;
+    if(s.week===10){ this.render(); return this.debutJudge(); }
+    if(COMPETS[s.week]){ this.render(); return this.runCompet(s.week); }
+    if(s.week>=2 && Math.random()<0.25){ this.render(); return this.showEvent(()=>this.nextWeek()); }
+    this.nextWeek();
+  },
+  nextWeek(){ this.st.week++; this.st.busy=false; this.render(); },
+
+  showEvent(done){
+    const ev=EVENTS[Math.floor(Math.random()*EVENTS.length)], s=this.st;
+    const ov=document.getElementById("ov");
+    ov.className="ov on";
+    ov.innerHTML=`<div class="ev-card"><div class="ev-emoji">${ev.emoji}</div>
+      <div class="ev-title">${ev.title}</div><div class="ev-text">${ev.text}</div>
+      <div class="ev-choices" id="evc"></div></div>`;
+    ov.onclick=null;
+    const box=document.getElementById("evc");
+    ev.choices.forEach(ch=>{
+      const b=document.createElement("button");
+      b.className="btn ghost";
+      // 분기형은 예상 성공확률을 미리 보여줌(우마무스메식 리스크 판단)
+      if(ch.odds){
+        const pct=Math.round(Math.min(0.92,ch.odds(s))*100);
+        b.innerHTML=`${ch.t} <span style="opacity:.55;font-size:12px;font-weight:600">· 성공 ${pct}%</span>`;
+      } else b.textContent=ch.t;
+      b.onclick=()=>{
+        if(ch.odds){
+          const winr = Math.random() < Math.min(0.92, ch.odds(s));
+          const res = winr ? ch.win : ch.lose;
+          res.fx(s); clampState(s);
+          ov.className="ov";
+          this.showRoll({cls:winr?"dg":"dc",label:res.label,emoji:res.emoji},
+            res.desc, ()=>{ this.render(); done(); });
+        } else {
+          ch.fx(s); clampState(s);
+          ov.className="ov"; this.render(); done();
+        }
+      };
+      box.appendChild(b);
+    });
+  },
+
+  debutJudge(){
+    const s=this.st;
+    const total=STATS.reduce((a,st)=>a+s[st.k],0);
+    const peak=Math.max(...STATS.map(st=>s[st.k]));
+    const pass = total>=110 || peak>=45;
+    const bonus = pass ? Math.round(1500+total*8) : Math.round(total*3);
+    s.fans+=bonus;
+    this.logWeek(pass?`🎊 <b>데뷔 성공!</b> 화려하게 데뷔했어`:`😅 <b>언더독 데뷔</b> — 아슬아슬 무대에 섰어`);
+    const ov=document.getElementById("ov"); ov.className="ov on"; ov.onclick=null;
+    ov.innerHTML=`<div class="ev-card"><div class="ev-emoji">${pass?"🎊":"😅"}</div>
+      <div class="ev-title">${pass?"🎉 데뷔 성공!":"😬 언더독 데뷔"}</div>
+      <div class="ev-text">${pass?"실력 합격! 화려하게 데뷔했어.":"아슬아슬하게 데뷔… 갈 길이 멀어."}<br>
+      데뷔 팬 <b>+${fmt(bonus)}</b><br><br>이제 <b>국내 시장</b>에서 라이벌들과 경쟁이 시작된다.</div>
+      <button class="btn" onclick="Game.afterDebut()">11주차로 →</button></div>`;
+  },
+
+  // 라이벌과 순위 대결 (필수 경쟁 이벤트)
+  runCompet(week){
+    const c=COMPETS[week], s=this.st;
+    let mine;
+    if(c.type==="stage"){
+      const f=c.field.reduce((a,k)=>a+s[k],0)/c.field.length;      // 무대 스탯(보컬·댄스·비주얼·끼) 평균
+      mine = f * (0.55 + 0.45*s.cond/100) * (0.9 + Math.random()*0.2);
+    } else {
+      const avg=STATS.reduce((a,st)=>a+s[st.k],0)/6;               // 종합력(시상식 주력)
+      const peak=Math.max(...STATS.map(st=>s[st.k]));              // 원톱 한 방도 일부 반영
+      const metric=Math.max(avg, peak*0.38);
+      mine = metric * (1 + Math.min(0.45, s.fans/45000)) * (0.9 + Math.random()*0.2);
+    }
+    const idxs=[]; while(idxs.length<3){ const r=Math.floor(Math.random()*RIVAL_POOL.length); if(!idxs.includes(r)) idxs.push(r); }
+    const rivals=idxs.map(i=>({name:RIVAL_POOL[i], emoji:RIVAL_EMOJI[i], score:c.base*(0.75+Math.random()*0.5), me:false}));
+    const board=[{name:s.idol.name, emoji:"🎤", score:mine, me:true}, ...rivals].sort((a,b)=>b.score-a.score);
+    const myRank=board.findIndex(r=>r.me)+1;
+    this.resolveCompet(c, board, myRank);
+  },
+
+  resolveCompet(c, board, myRank){
+    const s=this.st, N=board.length, win=myRank===1;
+    let head, sub, btn="계속 →", onCont=()=>{ document.getElementById("ov").className="ov"; this.nextWeek(); };
+
+    if(c.type==="stage"){
+      if(win){ s.fans+=Math.round(2200+c.base*45); s.mental+=8; s.cond=Math.max(0,s.cond-6);
+        head="🏆 음악방송 1위!"; sub="트로피 들고 앵콜! 팬덤이 폭발했어."; }
+      else if(myRank<=3){ s.fans+=Math.round(700); s.mental+=3;
+        head=`${myRank}위 · 상위권`; sub="1위는 놓쳤지만 존재감은 확실히 남겼어."; }
+      else { s.fans+=150; s.mental=Math.max(0,s.mental-6); s.cond=Math.max(0,s.cond-4);
+        head=`${myRank}위 · 순위권 밖`; sub="이번 컴백은 묻혔어… 다음을 노리자."; }
+    }
+    else if(c.gate){   // 국내 대상 = 월드 진출 관문 (1위만!)
+      if(win){ const b=Math.round(3800+s.fans*0.04); s.fans+=b; s.mental+=6;
+        head="🏆 대상 수상!"; sub=`국내 정상을 찍었어! 팬 <b>+${fmt(b)}</b><br>이제 <b>월드 무대</b>로! 보너스 10주.`;
+        btn="Road to World →";
+        onCont=()=>{ document.getElementById("ov").className="ov";
+          this.cutscene({act:"ACT 3", emoji:"✈️", title:"월드 무대", sub:"ROAD TO THE WORLD",
+            talk:"국내 정상 찍었어! 🏆 이제 전 세계가 무대야. 마지막 10주, 글로벌 대상까지 가보자!"},
+            ()=>this.nextWeek()); };
+      } else { s.fans+=400; head=`${myRank}위 · 대상 불발`;
+        sub="국내 대상 <b>1위</b>만 월드 무대에 설 수 있어. 정상의 벽을 넘지 못했어…";
+        onCont=()=>{ document.getElementById("ov").className="ov"; this.finish(false); }; btn="결과 확인 →"; }
+    }
+    else if(c.final){  // 글로벌 대상 = 최종
+      const b=Math.round(4000+(N-myRank+1)*1900+s.fans*0.04); s.fans+=b;
+      head = win?"👑 글로벌 대상 수상!":`${myRank}위`;
+      sub = `${win?"세계가 인정했어. 정점이야.":"월드 무대의 여정을 마쳤어."}<br>대상 팬 <b>+${fmt(b)}</b>`;
+      onCont=()=>{ document.getElementById("ov").className="ov";
+        this.resultLoading(()=>this.finish(true, myRank)); }; btn="최종 결과 →";
+    }
+    this.logWeek(`${c.emoji} <b>${c.title}</b> — ${head.replace(/<[^>]+>/g,"")}`);
+    this.showCompetBoard(c, board, myRank, head, sub, btn, onCont);
+  },
+
+  showCompetBoard(c, board, myRank, head, sub, btnLabel, onCont){
+    const ov=document.getElementById("ov"); ov.className="ov on"; ov.onclick=null;
+    const rows=board.map((r,i)=>{
+      const medal=["🥇","🥈","🥉"][i]||`${i+1}`;
+      return `<div class="lb-row ${r.me?"me":""}"><span class="r">${medal}</span>
+        <span class="who">${r.emoji} ${esc(r.name)}${r.me?" <small>· 나</small>":""}</span>
+        <span class="sc" style="color:var(--sub)">${Math.round(r.score)}</span></div>`;
+    }).join("");
+    ov.innerHTML=`<div class="ev-card"><div class="ev-emoji">${c.emoji}</div>
+      <div class="ev-title">${c.title}</div>
+      <div class="ev-text" style="margin-bottom:8px"><b style="color:var(--txt);font-size:16px">${head}</b><br>${sub}</div>
+      <div class="lb" style="margin:0 0 14px;text-align:left">${rows}</div>
+      <button class="btn" id="competCont">${btnLabel}</button></div>`;
+    document.getElementById("competCont").onclick=onCont;
+  },
+  contAfterJudge(){ document.getElementById("ov").className="ov"; this.nextWeek(); },
+
+  // ===== 연출: 페이즈 전환 컷씬 =====
+  cutscene(opt, cb){
+    const cs=document.getElementById("cutscene");
+    cs.className="cutscene on";
+    cs.innerHTML=`<div class="cs-in">
+        <div class="cs-act">${opt.act}</div>
+        <div class="cs-emoji">${opt.emoji}</div>
+        <div class="cs-title">${opt.title}</div>
+        <div class="cs-sub">${opt.sub}</div>
+        <div class="cs-talk"><img class="cs-mascot" src="assets/mascot.png" alt="">
+          <div class="cs-bubble">${opt.talk}</div></div>
+      </div><div class="cs-tap">탭하여 계속 →</div>`;
+    let done=false;
+    const go=()=>{ if(done) return; done=true; cs.onclick=null; cs.className="cutscene"; cb&&cb(); };
+    cs.onclick=go;
+    this._csTimer=setTimeout(go, 3400);   // 자동 진행(탭하면 스킵)
+  },
+  afterDebut(){
+    document.getElementById("ov").className="ov";
+    this.cutscene({act:"ACT 2", emoji:"🎤", title:"국내 시장 진출", sub:"DOMESTIC MARKET",
+      talk:"데뷔 성공! 🎉 이제 국내 라이벌들과 진짜 승부야. 음악방송·시상식 1위 노려보자!"},
+      ()=>this.nextWeek());
+  },
+
+  // ===== 연출: 최종 결과 집계 로딩 =====
+  resultLoading(cb){
+    const el=document.getElementById("loading");
+    el.className="loading on";
+    el.innerHTML=`<div class="load-ring"></div>
+      <div class="load-txt">최종 집계 중…</div>
+      <div class="load-step" id="loadStep">전 세계 투표 취합 중…</div>`;
+    const steps=["전 세계 투표 취합 중…","글로벌 차트 반영 중…","최종 팬덤 규모 확정 중…","결과 카드 생성 중…"];
+    let i=0; const st=document.getElementById("loadStep");
+    const iv=setInterval(()=>{ i++; if(i<steps.length) st.textContent=steps[i]; }, 780);
+    setTimeout(()=>{ clearInterval(iv); el.className="loading"; cb&&cb(); }, 3400);
+  },
+
+  ending(reachedWorld, finalRank){
+    const s=this.st;
+    const arr=STATS.map(st=>({...st, v:s[st.k]})).sort((a,b)=>b.v-a.v);
+    const top=arr[0], total=arr.reduce((a,b)=>a+b.v,0), minV=arr[arr.length-1].v;
+    const gap=top.v-arr[1].v;
+
+    if(!reachedWorld){
+      if(total<150) return {emoji:"💔",name:"팀 해체",tier:"F",
+        sub:`합계 ${Math.round(total)}. 국내의 벽을 넘지 못하고 해체됐어… 다음 생엔 꼭.`};
+      return {emoji:"🌗",name:`${top.n} 지역 스타`,tier:"C",
+        sub:`국내 대상 1위는 놓쳤지만 ${top.n} 하나로 단단한 마니아 팬층을 남겼어.`};
+    }
+    const champ=finalRank===1, podium=finalRank<=3;
+    const superA = minV>=60 && total>=360;
+    const onetop  = top.v>=82 && gap>=24;
+    const allround= minV>=50 && total>=315;
+    const solid   = minV>=38 && total>=255;
+    const onetopTitles={vocal:"세계가 인정한 보컬리스트",dance:"월드클래스 퍼포머",
+      visual:"글로벌 비주얼 아이콘",charm:"예능·화제성 끝판왕",
+      acting:"스크린을 접수한 배우돌",creative:"자컨·자작곡 아티스트"};
+
+    // SS — 6각 완성 (실력이 SS급, 순위 무관)
+    if(superA) return {emoji:"🌟",name:"글로벌 육각형 슈퍼스타",tier:"SS",
+      sub:`약점이 없어. 6가지 재능 모두 정상급인 완성형 월드스타.${champ?" 글로벌 대상까지 석권한 역대급이야.":" 역대급이야."}`};
+    // S — 대상 1위 + 원톱
+    if(champ && onetop) return {emoji:"👑",name:onetopTitles[top.k],tier:"S",
+      sub:`${top.n} ${Math.round(top.v)}. 압도적 한 방으로 글로벌 대상을 거머쥐었어.`};
+    // S — 대상 1위 + 올라운더
+    if(champ && allround) return {emoji:"🏆",name:"월드 정상 올라운더",tier:"S",
+      sub:`고르게 최상급인 육각형으로 글로벌 대상까지! 오래 사랑받을 대형 스타.`};
+    // S — 원톱 실력으로 상위 입상
+    if(onetop && podium) return {emoji:"👑",name:onetopTitles[top.k],tier:"S",
+      sub:`${top.n} ${Math.round(top.v)}. 확실한 한 방으로 세계 정상권에 섰어.`};
+    // S — 완성형 올라운더
+    if(allround) return {emoji:"🌈",name:"만능 올라운더 월드스타",tier:"S",
+      sub:`모난 데 없이 두루 잘하는 육각형. 오래 사랑받을 대형 스타야.`};
+    // A — 대상 1위지만 스탯은 평범 (화제성·팬덤으로 대관식) ← champ 하한
+    if(champ) return {emoji:"🎉",name:"이변의 대관식",tier:"A",
+      sub:`압도적 실력은 아니어도 화제성과 팬덤으로 글로벌 대상을 차지했어. 이것도 스타의 자질이야.`};
+    // A — 준수 + 상위 입상
+    if(solid && podium) return {emoji:"⭐",name:"믿고 보는 대형 스타",tier:"A",
+      sub:`빈틈 없이 성장했고 글로벌 시상식 입상까지. 어디 내놔도 손색없어.`};
+    // A — 준수
+    if(solid) return {emoji:"✨",name:"준수한 성장형 스타",tier:"A",
+      sub:`두루 준수하게 컸어. 다음 챕터가 더 기대되는 재목이야.`};
+    // B — 얇고 길게
+    return {emoji:"🌱",name:"얇고 길게 가는 아이돌",tier:"B",
+      sub:`한 방은 없지만 꾸준함으로 승부하는 롱런형. 이것도 능력이야.`};
+  },
+
+  finish(reachedWorld, finalRank){
+    const s=this.st;
+    const statTotal=STATS.reduce((a,st)=>a+s[st.k],0);
+    s.fans+=Math.round(statTotal*35 + s.mental*8);
+    const end=this.ending(reachedWorld, finalRank);
+    const statVals=STATS.map(st=>({n:st.n,k:st.k,c:st.c,v:Math.round(s[st.k]),g:grade(Math.round(s[st.k]))}));
+    const overall=grade(Math.round(statTotal/STATS.length));
+    const spStat=STATS.find(x=>x.k===s.idol.spec)||STATS[0];
+    this.lastResult={name:s.idol.name,grp:s.idol.grp,ending:end.name,emoji:end.emoji,
+      tier:end.tier,fans:s.fans,reachedWorld,statVals,overall,finalRank:finalRank||null,
+      spec:s.idol.spec, specName:spStat.n, specIco:spStat.ico, specColor:spStat.c, img:s.idol.img||"",
+      stage:reachedWorld?(finalRank?`글로벌 대상 ${finalRank}위`:"WORLD TOUR · WEEK 30"):"DOMESTIC 탈락"};
+    document.getElementById("endStage").textContent=
+      reachedWorld?(finalRank?`글로벌 대상 ${finalRank}위 · WEEK 30 종료`:"WORLD TOUR · WEEK 30 종료"):"DOMESTIC 탈락 · 육성 종료";
+    document.getElementById("endIdolBox").style.display="";
+    const eav=document.getElementById("endAvatar");
+    if(s.idol.img){ eav.src=s.idol.img; eav.style.display=""; } else { eav.style.display="none"; }
+    document.getElementById("endIdolName").innerHTML=
+      esc(s.idol.name)+(s.idol.grp&&s.idol.grp!=="커스텀 아이돌"?` <small>${esc(s.idol.grp)}</small>`:` <small>커스텀</small>`);
+    document.getElementById("endEmoji").textContent=end.emoji;
+    document.getElementById("endName").textContent=end.name;
+    document.getElementById("endSub").innerHTML=`${end.sub}<br><br>최종 팬 <b style="color:var(--gold)">${fmt(s.fans)}</b>명`;
+    document.getElementById("oGrade").innerHTML=
+      `종합 등급 <b>${overall}</b> &nbsp;·&nbsp; 타고난 재능 <b style="color:${spStat.c}">${spStat.ico} ${spStat.n}</b>`;
+    const gbox=document.getElementById("growthBox");
+    if(s.log && s.log.length){ gbox.style.display="";
+      gbox.innerHTML=`<h3>📖 ${esc(s.idol.name)}의 성장 서사</h3>`+s.log.map(l=>`<div class="gl">${l}</div>`).join(""); }
+    else gbox.style.display="none";
+    ["shareBtn","nameInput","saveBtn"].forEach(id=>document.getElementById(id).style.display="");
+    document.getElementById("nameInput").value="";
+    document.getElementById("againBtn").textContent="다시 하기";
+    drawRadar(document.getElementById("radar"), statVals, {dark:false});
+    this.renderBoard(null);
+    show("s-end");
+  },
+
+  // ===== 결과 카드 이미지 =====
+  async makeCard(){
+    const r=this.lastResult; const W=1080,H=1350;
+    const cv=document.createElement("canvas"); cv.width=W; cv.height=H;
+    const x=cv.getContext("2d");
+    // 밝은 앱톤 배경
+    const bg=x.createLinearGradient(0,0,0,H);
+    bg.addColorStop(0,"#ffe4ea"); bg.addColorStop(.5,"#fff2f4"); bg.addColorStop(1,"#ffffff");
+    x.fillStyle=bg; x.fillRect(0,0,W,H);
+    const rg=x.createRadialGradient(W/2,-120,60,W/2,-120,780);
+    rg.addColorStop(0,"rgba(236,58,92,.16)"); rg.addColorStop(1,"rgba(236,58,92,0)");
+    x.fillStyle=rg; x.fillRect(0,0,W,660);
+    x.textAlign="center";
+    x.fillStyle="#ec3a5c"; x.font="700 30px 'Apple SD Gothic Neo',sans-serif";
+    x.fillText("최애돌 · 아이돌 육성 타이쿤", W/2, 74);
+    // 아이돌 원형 사진 (로컬/커스텀만 — 원격 URL은 canvas 오염 방지로 생략)
+    const canUse = r.img && (r.img.startsWith('assets/') || r.img.startsWith('data:'));
+    const face = canUse ? await loadImg(r.img) : null;
+    const CY=228, R=96;
+    if(face){
+      x.save(); x.beginPath(); x.arc(W/2,CY,R,0,7); x.closePath(); x.clip();
+      const iw=face.naturalWidth, ih=face.naturalHeight, m=Math.min(iw,ih);
+      x.drawImage(face,(iw-m)/2,(ih-m)/2,m,m,W/2-R,CY-R,R*2,R*2); x.restore();
+    } else {
+      x.fillStyle="#ffe0e6"; x.beginPath(); x.arc(W/2,CY,R,0,7); x.fill();
+      x.font="86px sans-serif"; x.fillText("🎤",W/2,CY+30);
+    }
+    x.beginPath(); x.arc(W/2,CY,R,0,7); x.lineWidth=6; x.strokeStyle="#ec3a5c"; x.stroke();
+    // 이름·그룹
+    x.fillStyle="#2b2530"; x.font="800 66px 'Apple SD Gothic Neo',sans-serif";
+    x.fillText(r.name, W/2, 396);
+    x.fillStyle="#9a8f9a"; x.font="600 32px 'Apple SD Gothic Neo',sans-serif";
+    x.fillText(r.grp, W/2, 442);
+    // 엔딩
+    x.font="62px sans-serif"; x.fillText(r.emoji, W/2, 528);
+    x.fillStyle="#ec3a5c"; x.font="800 46px 'Apple SD Gothic Neo',sans-serif";
+    x.fillText(r.ending, W/2, 588);
+    x.fillStyle="#9a8f9a"; x.font="600 28px 'Apple SD Gothic Neo',sans-serif";
+    x.fillText(`타고난 재능 · ${r.specName||"-"}`, W/2, 632);
+    // radar
+    drawRadarCtx(x, W/2, 858, 186, r.statVals, {dark:false, big:true});
+    // 하단 바 (흰 카드)
+    x.fillStyle="#ffffff"; x.strokeStyle="#ffd9de"; x.lineWidth=2.5;
+    roundRect(x,80,1130,W-160,150,24); x.fill(); x.stroke();
+    x.textAlign="left";
+    x.fillStyle="#9a8f9a"; x.font="600 30px 'Apple SD Gothic Neo',sans-serif";
+    x.fillText("종합 등급", 130, 1190);
+    x.fillStyle=GRADE_COLOR[r.overall]; x.font="900 66px 'Apple SD Gothic Neo',sans-serif";
+    x.fillText(r.overall, 130, 1260);
+    x.textAlign="right";
+    x.fillStyle="#9a8f9a"; x.font="600 30px 'Apple SD Gothic Neo',sans-serif";
+    x.fillText("최종 팬", W-130, 1190);
+    x.fillStyle="#f0a01e"; x.font="900 60px 'Apple SD Gothic Neo',sans-serif";
+    x.fillText(fmt(r.fans), W-130, 1258);
+    x.textAlign="center"; x.fillStyle="#b9adb4"; x.font="600 25px 'Apple SD Gothic Neo',sans-serif";
+    x.fillText("🐥 최애돌에서 내 최애 키우기", W/2, 1328);
+    return cv;
+  },
+  async shareCard(){
+    if(!this.lastResult){return;}
+    const cv=await this.makeCard();
+    cv.toBlob(async (blob)=>{
+      const file=new File([blob],`idol-tycoon-${this.lastResult.name}.png`,{type:"image/png"});
+      const shareData={files:[file],title:"아이돌 육성 타이쿤",
+        text:`${this.lastResult.name} → ${this.lastResult.ending} (팬 ${fmt(this.lastResult.fans)}명)`};
+      if(navigator.canShare && navigator.canShare({files:[file]})){
+        try{ await navigator.share(shareData); return; }catch(e){ if(e.name==="AbortError") return; }
+      }
+      const a=document.createElement("a");
+      a.href=URL.createObjectURL(blob); a.download=file.name; a.click();
+      setTimeout(()=>URL.revokeObjectURL(a.href),4000);
+      toast("이미지를 저장했어! 📸");
+    },"image/png");
+  },
+
+  board(){ try{return JSON.parse(localStorage.getItem("idol_lb")||"[]");}catch(e){return[];} },
+  renderBoard(hl){
+    const list=this.board().slice().sort((a,b)=>b.fans-a.fans).slice(0,10);
+    const box=document.getElementById("lbBox");
+    if(!list.length){box.innerHTML=`<div class="lb-row"><span class="who muted">아직 기록이 없어. 첫 주자가 되어봐!</span></div>`;return;}
+    box.innerHTML=list.map((r,i)=>{
+      const me=hl!=null && r.fans===hl && r._me;
+      const medal=["🥇","🥈","🥉"][i]||`${i+1}`;
+      return `<div class="lb-row ${me?"me":""}"><span class="r">${medal}</span>
+        <span class="who">${r.emoji||"⭐"} ${esc(r.player||"익명")}
+          <small>· ${esc(r.name)} · ${esc(r.ending)}</small></span>
+        <span class="sc">${fmt(r.fans)}</span></div>`;
+    }).join("");
+  },
+  saveScore(){
+    if(!this.lastResult) return;
+    if(this.lastResult._saved){toast("이미 저장했어");return;}
+    const player=(document.getElementById("nameInput").value||"익명").slice(0,10);
+    const lb=this.board();
+    lb.forEach(r=>r._me=false);
+    lb.push({player,name:this.lastResult.name,ending:this.lastResult.ending,
+      emoji:this.lastResult.emoji,fans:this.lastResult.fans,_me:true});
+    localStorage.setItem("idol_lb", JSON.stringify(lb.slice(-200)));
+    this.lastResult._saved=true;
+    this.renderBoard(this.lastResult.fans);
+    toast("명예의 전당에 등록됐어! 🏆");
+  },
+  showBoard(){
+    document.getElementById("endStage").textContent="🏆 명예의 전당";
+    document.getElementById("endEmoji").textContent="🏆";
+    document.getElementById("endName").textContent="TOP 랭킹";
+    document.getElementById("endSub").innerHTML="지금까지 배출된 최고의 스타들";
+    document.getElementById("oGrade").innerHTML="";
+    document.getElementById("endIdolBox").style.display="none";
+    document.getElementById("growthBox").style.display="none";
+    const rc=document.getElementById("radar").getContext("2d");
+    rc.clearRect(0,0,580,580);
+    ["shareBtn","nameInput","saveBtn"].forEach(id=>document.getElementById(id).style.display="none");
+    document.getElementById("againBtn").textContent="홈으로";
+    this.lastResult=null; this.renderBoard(null); show("s-end");
+  },
+  reset(){
+    ["shareBtn","nameInput","saveBtn"].forEach(id=>document.getElementById(id).style.display="");
+    this.st=null;this.selId=null;this.lastResult=null; show("s-title");
+  },
+};
+
+// ===== 레이더 차트 =====
+function drawRadar(canvas, statVals, opts){
+  const x=canvas.getContext("2d");
+  x.clearRect(0,0,canvas.width,canvas.height);
+  drawRadarCtx(x, canvas.width/2, canvas.height/2+8, canvas.width*0.31, statVals, opts||{});
+}
+function drawRadarCtx(x, cx, cy, R, vals, opts){
+  const N=vals.length, dark=opts.dark, big=opts.big;
+  const ang=i=>-Math.PI/2 + i*(2*Math.PI/N);
+  const grid = dark?"rgba(255,255,255,.13)":"rgba(0,0,0,.12)";
+  // 그리드 링
+  x.lineWidth=1.2;
+  for(let k=1;k<=4;k++){
+    x.beginPath();
+    for(let i=0;i<N;i++){ const r=R*k/4, px=cx+Math.cos(ang(i))*r, py=cy+Math.sin(ang(i))*r;
+      i?x.lineTo(px,py):x.moveTo(px,py); }
+    x.closePath(); x.strokeStyle=grid; x.stroke();
+  }
+  // 축
+  for(let i=0;i<N;i++){ x.beginPath(); x.moveTo(cx,cy);
+    x.lineTo(cx+Math.cos(ang(i))*R, cy+Math.sin(ang(i))*R); x.strokeStyle=grid; x.stroke(); }
+  // 데이터 폴리곤
+  x.beginPath();
+  for(let i=0;i<N;i++){ const r=R*Math.min(100,vals[i].v)/100;
+    const px=cx+Math.cos(ang(i))*r, py=cy+Math.sin(ang(i))*r; i?x.lineTo(px,py):x.moveTo(px,py); }
+  x.closePath();
+  const fill=x.createLinearGradient(cx-R,cy-R,cx+R,cy+R);
+  fill.addColorStop(0,"rgba(255,95,162,.42)"); fill.addColorStop(1,"rgba(139,91,255,.42)");
+  x.fillStyle=fill; x.fill();
+  x.strokeStyle="#ff5fa2"; x.lineWidth=big?3:2.2; x.stroke();
+  // 꼭짓점 + 라벨
+  const lf=big?"700 26px":"700 12px";
+  const gf=big?"900 30px":"900 14px";
+  for(let i=0;i<N;i++){
+    const r=R*Math.min(100,vals[i].v)/100;
+    const px=cx+Math.cos(ang(i))*r, py=cy+Math.sin(ang(i))*r;
+    x.beginPath(); x.arc(px,py,big?6:4,0,7); x.fillStyle=vals[i].c; x.fill();
+    const lr=R+(big?52:26), lx=cx+Math.cos(ang(i))*lr, ly=cy+Math.sin(ang(i))*lr;
+    x.textAlign = Math.abs(Math.cos(ang(i)))<0.3 ? "center" : (Math.cos(ang(i))>0?"left":"right");
+    x.fillStyle=dark?"#d9d2f0":"#333"; x.font=lf+" 'Apple SD Gothic Neo',sans-serif";
+    x.fillText(vals[i].n, lx, ly-(big?6:3));
+    x.fillStyle=vals[i].c; x.font=gf+" 'Apple SD Gothic Neo',sans-serif";
+    x.fillText(vals[i].g+" · "+vals[i].v, lx, ly+(big?26:12));
+  }
+  x.textAlign="left";
+}
+function roundRect(x,rx,ry,w,h,r){ x.beginPath();
+  x.moveTo(rx+r,ry); x.arcTo(rx+w,ry,rx+w,ry+h,r); x.arcTo(rx+w,ry+h,rx,ry+h,r);
+  x.arcTo(rx,ry+h,rx,ry,r); x.arcTo(rx,ry,rx+w,ry,r); x.closePath(); }
+
+function show(id){document.querySelectorAll(".screen").forEach(s=>s.classList.remove("on"));
+  document.getElementById(id).classList.add("on"); document.getElementById("app").scrollTop=0;}
+function fmt(n){return Math.round(n||0).toLocaleString("en-US");}
+function clampState(s){ s.cond=Math.max(0,Math.min(100,s.cond)); s.mental=Math.max(0,s.mental);
+  s.fans=Math.max(0,Math.round(s.fans)); STATS.forEach(st=>s[st.k]=Math.max(0,Math.round(s[st.k]))); }
+function loadImg(src){ return new Promise(res=>{ if(!src){res(null);return;}
+  const i=new Image(); i.onload=()=>res(i); i.onerror=()=>res(null); i.src=src; }); }
+function countUp(el, from, to, dur){
+  const t0=performance.now();
+  const step=(t)=>{ const p=Math.min(1,(t-t0)/dur);
+    el.textContent=Math.round(from+(to-from)*p); if(p<1) requestAnimationFrame(step); };
+  requestAnimationFrame(step);
+}
+function esc(s){return (s||"").replace(/[<>&]/g,c=>({"<":"&lt;",">":"&gt;","&":"&amp;"}[c]));}
+let toastTimer;
+function toast(msg){const t=document.getElementById("toast");t.textContent=msg;t.className="toast on";
+  clearTimeout(toastTimer);toastTimer=setTimeout(()=>t.className="toast",1900);}
+</script>
