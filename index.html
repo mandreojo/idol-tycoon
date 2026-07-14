@@ -347,28 +347,28 @@
 
   <!-- SELECT -->
   <section class="screen" id="s-select">
-    <h2>누구를 키울까?</h2>
+    <h2 data-i18n="sel_who">누구를 키울까?</h2>
     <div class="segtab">
-      <button class="seg on" id="seg-search" onclick="Game.mode('search')">🔍 아이돌 검색</button>
-      <button class="seg" id="seg-custom" onclick="Game.mode('custom')">✏️ 커스텀</button>
+      <button class="seg on" id="seg-search" onclick="Game.mode('search')" data-i18n="sel_tab_search">🔍 아이돌 검색</button>
+      <button class="seg" id="seg-custom" onclick="Game.mode('custom')" data-i18n="sel_tab_custom">✏️ 커스텀</button>
     </div>
 
     <div id="mode-search" class="modebox">
-      <input class="srch" id="idolSearch" placeholder="이름·그룹 검색 (예: 리사, BTS)" oninput="Game.search()" autocomplete="off">
+      <input class="srch" id="idolSearch" placeholder="이름·그룹 검색 (예: 리사, BTS)" data-i18n-ph="sel_search_ph" oninput="Game.search()" autocomplete="off">
       <div class="grid" id="idolGrid"></div>
     </div>
 
     <div id="mode-custom" class="modebox" style="display:none">
       <label class="uploader" id="uploader">
         <input type="file" accept="image/*" id="customFile" onchange="Game.customPhoto(event)" hidden>
-        <span id="upPh">📷<br><small>사진 올리기 (선택)</small></span>
+        <span id="upPh">📷<br><small data-i18n="sel_photo">사진 올리기 (선택)</small></span>
       </label>
-      <input class="srch" id="customName" placeholder="아이돌 이름 (최대 10자)" maxlength="10" oninput="Game.customValidate()" autocomplete="off">
-      <p class="muted" style="margin:2px 0 7px">타고난 특기를 골라</p>
+      <input class="srch" id="customName" placeholder="아이돌 이름 (최대 10자)" data-i18n-ph="sel_name_ph" maxlength="10" oninput="Game.customValidate()" autocomplete="off">
+      <p class="muted" style="margin:2px 0 7px" data-i18n="sel_pick_spec">타고난 특기를 골라</p>
       <div class="specpick" id="specPick"></div>
     </div>
 
-    <button class="btn startfab hide" id="startBtn" disabled onclick="Game.start()">육성 시작 →</button>
+    <button class="btn startfab hide" id="startBtn" disabled onclick="Game.start()" data-i18n="sel_start">육성 시작 →</button>
   </section>
 
   <!-- PLAY -->
@@ -388,7 +388,7 @@
     </div>
 
     <div class="cond">
-      <div class="barlbl"><span>컨디션</span><b id="condTxt">100</b></div>
+      <div class="barlbl"><span data-i18n="p_cond">컨디션</span><b id="condTxt">100</b></div>
       <div class="bar"><i id="condBar" style="width:100%;background:var(--good)"></i></div>
     </div>
 
@@ -735,29 +735,29 @@ const Game = {
     btn.classList.toggle("hide", !ready);
     if(ready){
       const nm = this.curMode==="custom"
-        ? ((document.getElementById("customName").value||"내 아이돌").trim()||"내 아이돌")
+        ? ((document.getElementById("customName").value||t("my_idol")).trim()||t("my_idol"))
         : this.selIdol.name;
-      btn.textContent=`${nm} 육성 시작 →`;
-    } else btn.textContent="육성 시작 →";
+      btn.textContent=t("sel_start_named",{name:nm});
+    } else btn.textContent=t("sel_start");
   },
   start(){
     let idol;
     if(this.curMode==="custom"){
-      const nm=(document.getElementById("customName").value||"내 아이돌").trim().slice(0,10) || "내 아이돌";
+      const nm=(document.getElementById("customName").value||t("my_idol")).trim().slice(0,10) || t("my_idol");
       if(!this.customSpec) return;
-      idol={id:"custom", name:nm, grp:"커스텀 아이돌", spec:this.customSpec, img:this.customImg||""};
+      idol={id:"custom", name:nm, grp:t("custom_idol"), spec:this.customSpec, img:this.customImg||""};
     } else {
       idol=this.selIdol; if(!idol) return;
     }
     const {base} = talentOf(idol.spec);
     this.st = {idol, ...base, cond:100, fans:0, week:1, busy:false, log:[]};
-    this.logWeek(`<b>${esc(idol.name)}</b> 데뷔 프로젝트 시작 — 함께 월드스타를 향해!`);
+    this.logWeek(t("start_log",{name:esc(idol.name)}));
     this.save();
-    this.cutscene({act:"ACT 1", emoji:"🎬", title:"데뷔를 향해", sub:"ROAD TO DEBUT",
-      talk:`${idol.name}, 데뷔 준비 시작! 52주 동안 키워서 월드스타로 만들어보자 🔥`},
-      ()=>{ show("s-play"); this.startWeek(); toast(`${idol.name} 육성 시작!`); });
+    this.cutscene({act:t("cs_act1"), emoji:"🎬", title:t("cs1_title"), sub:t("cs1_sub"),
+      talk:t("cs1_talk",{name:idol.name})},
+      ()=>{ show("s-play"); this.startWeek(); toast(t("start_toast",{name:idol.name})); });
   },
-  actName(w){ return w<=12?"Road to Debut":w<=36?"Domestic Market":"Road to World"; },
+  actName(w){ return w<=12?t("act_debut"):w<=36?t("act_domestic"):t("act_world"); },
 
   render(){
     const s=this.st, idol=s.idol;
@@ -767,7 +767,7 @@ const Game = {
     document.getElementById("pName").textContent=idol.name;
     document.getElementById("pChip").textContent=idol.grp;
     document.getElementById("pFans").textContent=fmt(s.fans);
-    document.getElementById("pWeek").textContent=`WEEK ${s.week} / 52`;
+    document.getElementById("pWeek").textContent=t("p_week",{w:s.week});
     document.getElementById("pAct").textContent=this.actName(s.week);
     const cb=document.getElementById("condBar");
     cb.style.width=Math.max(0,s.cond)+"%";
@@ -776,20 +776,20 @@ const Game = {
     document.getElementById("statBox").innerHTML=[...STATS,MENTAL].map(st=>{
       if(st.k==="mental"){
         const mv=Math.round(s.mental);
-        return `<div class="stat" data-k="mental"><span class="k">${st.ico} ${st.n}</span>
+        return `<div class="stat" data-k="mental"><span class="k">${st.ico} ${t("st_"+st.k)}</span>
           <span class="bar"><i style="width:${Math.min(100,mv)}%;background:${st.c}"></i></span>
           <span class="v">${mv}</span></div>`;
       }
       const p=Math.round(s[st.k]); const g=grade(p); const prog=progOf(p);
-      return `<div class="stat" data-k="${st.k}"><span class="k">${st.ico} ${st.n}</span>
+      return `<div class="stat" data-k="${st.k}"><span class="k">${st.ico} ${t("st_"+st.k)}</span>
         <span class="bar"><i style="width:${prog}%;background:${st.c}"></i></span>
         <span class="v">${prog}</span>
         <span class="gbadge" style="background:${GRADE_COLOR[g]}">${g}</span></div>`;
     }).join("");
     // 연습실 패널: 도트 버디 + 다음 관문 D-day + 진행바
     const sex=(idol.cat==="M")?"m":"f";
-    const MS=[{w:12,t:"🎤 데뷔 심사"},{w:20,t:"📺 음악방송 1위 도전"},{w:28,t:"🎬 음방 2연속 1위"},
-              {w:36,t:"🏆 국내 연말 가요대상"},{w:44,t:"🌍 글로벌 뮤직쇼"},{w:52,t:"👑 글로벌 대상"}];
+    const MS=[{w:12,k:"ms_debut"},{w:20,k:"ms_music1"},{w:28,k:"ms_music2"},
+              {w:36,k:"ms_award"},{w:44,k:"ms_global_show"},{w:52,k:"ms_global_award"}];
     const nx=MS.find(m=>m.w>=s.week)||MS[MS.length-1];
     const prevW=(MS.filter(m=>m.w<nx.w).map(m=>m.w).pop())||0;
     const prog=Math.max(6,Math.min(100,Math.round((s.week-prevW)/(nx.w-prevW)*100)));
@@ -797,19 +797,19 @@ const Game = {
     document.getElementById("practiceBox").innerHTML=
       `<img class="pr-buddy" src="assets/emo/buddy.png" alt="">
        <div class="pr-info">
-         <div class="pr-label">다음 관문 ${dday>0?`· D-${dday}주`:"· 이번 주!"}</div>
-         <div class="pr-next">${nx.t}</div>
+         <div class="pr-label">${dday>0?t("pr_next_dday",{d:dday}):t("pr_next_now")}</div>
+         <div class="pr-next">${t(nx.k)}</div>
          <div class="pr-track"><i style="width:${prog}%"></i></div>
        </div>`;
     document.getElementById("actionBox").innerHTML=
-      `<div class="agrid">${TRAININGS.map(t=>`
-        <button class="act" onclick="Game.train('${t.k}')">
-          <span class="ico">${t.ico}</span>
-          <span class="body"><span class="t">${t.t}</span><span class="d">${t.d}</span></span>
+      `<div class="agrid">${TRAININGS.map(tr=>`
+        <button class="act" onclick="Game.train('${tr.k}')">
+          <span class="ico">${tr.ico}</span>
+          <span class="body"><span class="t">${t("tr_"+tr.k+"_t")}</span><span class="d">${t("tr_"+tr.k+"_d")}</span></span>
         </button>`).join("")}</div>
       <button class="act rest" onclick="Game.train('rest')">
         <span class="ico">${REST.ico}</span>
-        <span class="body"><span class="t">${REST.t}</span><span class="d">${REST.d}</span></span>
+        <span class="body"><span class="t">${t("tr_rest_t")}</span><span class="d">${t("tr_rest_d")}</span></span>
       </button>`;
   },
 
