@@ -300,6 +300,9 @@
   .dex-name{font-size:14px;font-weight:800;margin-bottom:4px}
   .dexcell.lock .dex-name{color:var(--sub)}
   .dex-hint{font-size:11px;color:var(--sub);line-height:1.45}
+  .dex-unlock{display:table;margin:0 auto 10px;padding:6px 14px;border-radius:20px;
+    font-size:13px;font-weight:800;color:#fff;background:linear-gradient(135deg,var(--gold),var(--accent2));
+    box-shadow:0 4px 12px -3px var(--accent2);animation:emoIn .5s cubic-bezier(.3,1.35,.5,1)}
 </style>
 
 <div id="app">
@@ -1163,7 +1166,7 @@ const Game = {
     const statTotal=STATS.reduce((a,st)=>a+s[st.k],0);
     s.fans+=Math.round(statTotal*35 + s.mental*8);
     const end=this.ending(reachedWorld, finalRank);
-    this.dexAdd(dexIdOf(end));   // 엔딩 도감 기록
+    const dexNew=this.dexAdd(dexIdOf(end));   // 엔딩 도감 기록 (첫 달성이면 true)
     const statVals=STATS.map(st=>({n:st.n,k:st.k,c:st.c,v:Math.round(s[st.k]),g:grade(Math.round(s[st.k]))}));
     const overall=grade(Math.round(statTotal/STATS.length));
     const spStat=STATS.find(x=>x.k===s.idol.spec)||STATS[0];
@@ -1180,7 +1183,8 @@ const Game = {
       esc(s.idol.name)+(s.idol.grp&&s.idol.grp!=="커스텀 아이돌"?` <small>${esc(s.idol.grp)}</small>`:` <small>커스텀</small>`);
     document.getElementById("endEmoji").textContent=end.emoji;
     document.getElementById("endName").textContent=end.name;
-    document.getElementById("endSub").innerHTML=`${end.sub}<br><br>최종 팬 <b style="color:var(--gold)">${fmt(s.fans)}</b>명`;
+    const dexChip = dexNew ? `<div class="dex-unlock">🎉 새 엔딩 해금! · 도감에 기록됐어</div>` : "";
+    document.getElementById("endSub").innerHTML=`${dexChip}${end.sub}<br><br>최종 팬 <b style="color:var(--gold)">${fmt(s.fans)}</b>명`;
     document.getElementById("oGrade").innerHTML=
       `종합 등급 <b>${overall}</b> &nbsp;·&nbsp; 타고난 재능 <b style="color:${spStat.c}">${spStat.ico} ${spStat.n}</b>`;
     const gbox=document.getElementById("growthBox");
@@ -1349,8 +1353,8 @@ const Game = {
 
   // ===== 엔딩 도감 =====
   dexGot(){ try{ return new Set(JSON.parse(localStorage.getItem("idol_dex")||"[]")); }catch(e){ return new Set(); } },
-  dexAdd(id){ if(!id) return; const g=this.dexGot(); if(!g.has(id)){ g.add(id);
-    try{ localStorage.setItem("idol_dex", JSON.stringify([...g])); }catch(e){} } },
+  dexAdd(id){ if(!id) return false; const g=this.dexGot(); if(g.has(id)) return false;
+    g.add(id); try{ localStorage.setItem("idol_dex", JSON.stringify([...g])); }catch(e){} return true; },
   showDex(){
     const got=this.dexGot();
     document.getElementById("dexCount").textContent=`${got.size} / ${ENDING_DEX.length}`;
