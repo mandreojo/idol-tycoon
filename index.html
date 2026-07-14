@@ -303,6 +303,15 @@
   .dex-unlock{display:table;margin:0 auto 10px;padding:6px 14px;border-radius:20px;
     font-size:13px;font-weight:800;color:#fff;background:linear-gradient(135deg,var(--gold),var(--accent2));
     box-shadow:0 4px 12px -3px var(--accent2);animation:emoIn .5s cubic-bezier(.3,1.35,.5,1)}
+
+  /* 카드 저장 프리뷰 (모바일 롱프레스) */
+  .cardsave{display:flex;flex-direction:column;align-items:center;width:100%;max-width:340px}
+  .cardsave-tip{font-size:14px;font-weight:700;color:var(--txt);line-height:1.5;margin-bottom:12px;text-align:center}
+  .cardsave-tip b{color:var(--accent)}
+  .cardsave-img{width:100%;max-width:300px;border-radius:16px;box-shadow:0 10px 30px rgba(0,0,0,.28);
+    -webkit-touch-callout:default;touch-callout:default}
+  .cardsave-sub{font-size:12px;color:var(--sub);line-height:1.5;margin-top:12px;text-align:center}
+  .cardsave-sub b{color:var(--txt)}
 </style>
 
 <div id="app">
@@ -478,12 +487,12 @@ const RESULT_FX = {
   great:{motion:"rx-jump",  burst:"party"},
 };
 
+// 컨디션이 핵심 레버: 높으면 대성공↑·안정, 낮으면 대실패 급증·대성공 희박.
+// 컨디션 0에서 훈련하면 대실패/실패가 70%+ → 사실상 도박(재율애비 요청: 저컨디션 페널티 크게)
 function rollJudge(cond, mental){
-  let pGreat = 0.12 + cond/400;
-  let pFail  = 0.30 - cond/250 - mental/1500;
-  let pDbad  = 0.14 - cond/500 - mental/900;
-  pFail = Math.max(0.04, pFail);
-  pDbad = Math.max(0.015, pDbad);
+  let pGreat = Math.max(0, 0.03 + cond*0.0035);            // 0:0.03  50:0.205  100:0.38
+  let pDbad  = Math.max(0.02, 0.44 - cond*0.0052 - mental/1400); // 0:~0.41 50:~0.15 100:~0.02
+  let pFail  = Math.max(0.05, 0.34 - cond*0.0022 - mental/1600);
   const r = Math.random();
   if(r < pDbad) return "dbad";
   if(r < pDbad + pFail) return "fail";
@@ -510,65 +519,65 @@ const EVENTS = [
   // ── 분기형 (도전·리스크) ──
   {emoji:"📺", title:"예능 대박 각?", text:"인기 예능 고정 자리가 걸린 파일럿. 잘 살리면 화제성 폭발, 삐끗하면 편집 굴욕.",
    choices:[
-     {t:"끼 발산하며 올인", odds:s=>0.40+s.charm/1400+s.cond/500,
-       win:{label:"예능 캐 각인!",emoji:"🤩",desc:"끼 <b>+28</b> · 팬 <b>대폭↑</b> · 컨디션 <b>-10</b>",
-            fx:s=>{s.charm+=28;s.fans+=Math.round(1500+s.charm*4);s.cond-=10;}},
-       lose:{label:"통편집…",emoji:"✂️",desc:"멘탈 <b>-8</b> · 컨디션 <b>-8</b> · 팬 소폭",
-            fx:s=>{s.mental-=8;s.cond-=8;s.fans+=120;}}},
+     {t:"끼 발산하며 올인", odds:s=>0.38+s.charm/1400+s.cond/500,
+       win:{label:"예능 캐 각인!",emoji:"🤩",desc:"끼 <b>+32</b> · 팬 <b>대폭↑↑</b> · 컨디션 <b>-10</b>",
+            fx:s=>{s.charm+=32;s.fans+=Math.round(2000+s.charm*5);s.cond-=10;}},
+       lose:{label:"통편집·굴욕짤",emoji:"✂️",desc:"멘탈 <b>-15</b> · 컨디션 <b>-14</b> · 팬 <b>↓↓</b>",
+            fx:s=>{s.mental-=15;s.cond-=14;s.fans=Math.round(s.fans*0.88);}}},
      {t:"연습에 집중 (멘탈 +7)", fx:s=>{s.mental+=7;}},
    ]},
   {emoji:"🎬", title:"드라마 조연 캐스팅", text:"연기돌로 갈 기회. 근데 발연기 논란 나면 이미지 타격이 커.",
    choices:[
-     {t:"연기 도전", odds:s=>0.35+s.acting/1100+s.mental/500,
-       win:{label:"인생 조연!",emoji:"🎬",desc:"연기 <b>+34</b> · 팬 <b>↑↑</b> · 컨디션 <b>-12</b>",
-            fx:s=>{s.acting+=34;s.fans+=Math.round(1600);s.cond-=12;}},
-       lose:{label:"발연기 논란",emoji:"😬",desc:"연기 <b>+10</b> · 멘탈 <b>-7</b> · 팬 <b>↓</b>",
-            fx:s=>{s.acting+=10;s.mental-=7;s.fans=Math.round(s.fans*0.95);}}},
+     {t:"연기 도전", odds:s=>0.34+s.acting/1100+s.mental/500,
+       win:{label:"인생 조연!",emoji:"🎬",desc:"연기 <b>+40</b> · 팬 <b>↑↑↑</b> · 컨디션 <b>-12</b>",
+            fx:s=>{s.acting+=40;s.fans+=Math.round(2100);s.cond-=12;}},
+       lose:{label:"발연기 논란",emoji:"😬",desc:"연기 <b>+6</b> · 멘탈 <b>-14</b> · 팬 <b>↓↓</b>",
+            fx:s=>{s.acting+=6;s.mental-=14;s.fans=Math.round(s.fans*0.85);}}},
      {t:"음악에 집중 (보컬 +14)", fx:s=>{s.vocal+=14;}},
    ]},
   {emoji:"📹", title:"편집 없는 生라이브", text:"실시간 소통 라이브 제안. 날것 그대로라 리스크가 커.",
    choices:[
-     {t:"생방송 강행", odds:s=>0.45+s.charm/1300+s.mental/500,
-       win:{label:"라이브 레전드!",emoji:"🎥",desc:"끼 <b>+24</b> · 팬 <b>대폭↑</b>",
-            fx:s=>{s.charm+=24;s.fans+=Math.round(1400+s.charm*3);s.cond-=6;}},
-       lose:{label:"방송사고…",emoji:"📵",desc:"멘탈 <b>-9</b> · 컨디션 <b>-6</b>",
-            fx:s=>{s.mental-=9;s.cond-=6;s.fans+=90;}}},
+     {t:"생방송 강행", odds:s=>0.44+s.charm/1300+s.mental/500,
+       win:{label:"라이브 레전드!",emoji:"🎥",desc:"끼 <b>+28</b> · 팬 <b>대폭↑↑</b>",
+            fx:s=>{s.charm+=28;s.fans+=Math.round(1800+s.charm*4);s.cond-=6;}},
+       lose:{label:"방송사고·박제",emoji:"📵",desc:"멘탈 <b>-16</b> · 컨디션 <b>-13</b> · 팬 <b>↓</b>",
+            fx:s=>{s.mental-=16;s.cond-=13;s.fans=Math.round(s.fans*0.92);}}},
      {t:"녹화로 안전하게 (끼 +12)", fx:s=>{s.charm+=12;}},
    ]},
   {emoji:"🕺", title:"챌린지 열풍", text:"네 안무 클립이 SNS에서 도는 중. 챌린지 유행을 노려볼까?",
    choices:[
-     {t:"댄스 챌린지 점화", odds:s=>0.42+s.dance/1300+s.visual/2000,
-       win:{label:"떡상 챌린지!",emoji:"🔥",desc:"댄스 <b>+30</b> · 팬 <b>폭발↑</b>",
-            fx:s=>{s.dance+=30;s.fans+=Math.round(2000+s.dance*4);}},
-       lose:{label:"묻힘…",emoji:"🥲",desc:"댄스 <b>+9</b> · 팬 소폭",
-            fx:s=>{s.dance+=9;s.fans+=200;}}},
+     {t:"댄스 챌린지 점화", odds:s=>0.40+s.dance/1300+s.visual/2000,
+       win:{label:"떡상 챌린지!",emoji:"🔥",desc:"댄스 <b>+36</b> · 팬 <b>폭발↑↑</b>",
+            fx:s=>{s.dance+=36;s.fans+=Math.round(2600+s.dance*5);}},
+       lose:{label:"조롱 밈으로 소비",emoji:"🥲",desc:"댄스 <b>+4</b> · 멘탈 <b>-10</b> · 팬 <b>↓</b>",
+            fx:s=>{s.dance+=4;s.mental-=10;s.fans=Math.round(s.fans*0.93);}}},
      {t:"완성도 더 높이기 (댄스 +14)", fx:s=>{s.dance+=14;}},
    ]},
   {emoji:"💄", title:"명품 브랜드 CF", text:"글로벌 브랜드 광고 제안. 비주얼 승부라 부담도 커.",
    choices:[
-     {t:"메인 모델 도전", odds:s=>0.38+s.visual/1200+s.charm/2000,
-       win:{label:"브랜드 뮤즈!",emoji:"👑",desc:"비주얼 <b>+30</b> · 팬 <b>↑↑</b>",
-            fx:s=>{s.visual+=30;s.fans+=Math.round(1800);}},
-       lose:{label:"이미지 안 맞음",emoji:"🫤",desc:"비주얼 <b>+9</b> · 멘탈 <b>-5</b>",
-            fx:s=>{s.visual+=9;s.mental-=5;}}},
+     {t:"메인 모델 도전", odds:s=>0.36+s.visual/1200+s.charm/2000,
+       win:{label:"브랜드 뮤즈!",emoji:"👑",desc:"비주얼 <b>+36</b> · 팬 <b>↑↑↑</b>",
+            fx:s=>{s.visual+=36;s.fans+=Math.round(2300);}},
+       lose:{label:"혹평·계약 무산",emoji:"🫤",desc:"비주얼 <b>+5</b> · 멘탈 <b>-12</b> · 팬 <b>↓</b>",
+            fx:s=>{s.visual+=5;s.mental-=12;s.fans=Math.round(s.fans*0.93);}}},
      {t:"내실부터 다지기 (비주얼 +12)", fx:s=>{s.visual+=12;}},
    ]},
   {emoji:"🎙️", title:"서바이벌 프로 출연", text:"경연 프로에서 실력 검증 무대. 이기면 급상승, 지면 굴욕.",
    choices:[
-     {t:"경연 참가", odds:s=>0.30+(s.vocal+s.dance)/2600+s.cond/500,
-       win:{label:"올킬 무대!",emoji:"🏅",desc:"보컬·댄스 <b>+20</b> · 팬 <b>대폭↑</b>",
-            fx:s=>{s.vocal+=20;s.dance+=20;s.fans+=Math.round(2200);s.cond-=10;}},
-       lose:{label:"탈락…",emoji:"💧",desc:"멘탈 <b>-10</b> · 컨디션 <b>-8</b>",
-            fx:s=>{s.mental-=10;s.cond-=8;s.fans+=140;}}},
+     {t:"경연 참가", odds:s=>0.28+(s.vocal+s.dance)/2600+s.cond/500,
+       win:{label:"올킬 무대!",emoji:"🏅",desc:"보컬·댄스 <b>+24</b> · 팬 <b>대폭↑↑</b>",
+            fx:s=>{s.vocal+=24;s.dance+=24;s.fans+=Math.round(2800);s.cond-=10;}},
+       lose:{label:"광탈·악편 논란",emoji:"💧",desc:"멘탈 <b>-18</b> · 컨디션 <b>-14</b> · 팬 <b>↓↓</b>",
+            fx:s=>{s.mental-=18;s.cond-=14;s.fans=Math.round(s.fans*0.9);}}},
      {t:"기권하고 컨디션 관리 (컨디션 +12)", fx:s=>{s.cond=Math.min(100,s.cond+12);}},
    ]},
   {emoji:"💞", title:"열애설 보도", text:"근거 약한 열애설이 터졌어. 대응이 관건이야.",
    choices:[
-     {t:"쿨하게 정면 대응", odds:s=>0.50+s.mental/300,
-       win:{label:"대인배 인정!",emoji:"😎",desc:"멘탈 <b>+8</b> · 팬 <b>↑</b>",
-            fx:s=>{s.mental+=8;s.fans+=Math.round(900);}},
-       lose:{label:"논란 확산",emoji:"🌪️",desc:"멘탈 <b>-9</b> · 팬 <b>↓</b>",
-            fx:s=>{s.mental-=9;s.fans=Math.round(s.fans*0.93);}}},
+     {t:"쿨하게 정면 대응", odds:s=>0.48+s.mental/300,
+       win:{label:"대인배 인정!",emoji:"😎",desc:"멘탈 <b>+10</b> · 팬 <b>↑↑</b>",
+            fx:s=>{s.mental+=10;s.fans+=Math.round(1300);}},
+       lose:{label:"루머 눈덩이·탈덕",emoji:"🌪️",desc:"멘탈 <b>-16</b> · 팬 <b>↓↓↓</b> · 컨디션 <b>-6</b>",
+            fx:s=>{s.mental-=16;s.fans=Math.round(s.fans*0.8);s.cond-=6;}}},
      {t:"소속사에 맡기고 잠수 (컨디션 +10)", fx:s=>{s.cond=Math.min(100,s.cond+10);}},
    ]},
   // ── 확정형 (트레이드오프·회복) ──
@@ -610,11 +619,11 @@ const RIVAL_EMOJI = ["💫","⚡","🌙","🥀","🌸","🔮","🌌","🖤","✴
 // 52주 3막: 데뷔 12주 / 국내 20·28 / 국내대상 36(월드 진출 관문) / 월드 44 / 글로벌대상 52.
 const AWARD_PEAK_K = 0.34;   // 시상식에서 원톱 스탯 반영 계수(낮을수록 몰빵 불리)
 const COMPETS = {
-  20:{type:"stage", emoji:"📺", title:"첫 음악방송 1위 도전",  field:["vocal","dance","visual","charm"], base:165},
-  28:{type:"stage", emoji:"🎬", title:"음악방송 2연속 1위 도전", field:["vocal","dance","visual","charm"], base:210},
-  36:{type:"award", emoji:"🏆", title:"국내 연말 가요대상",     base:320, gate:true},
-  44:{type:"stage", emoji:"🌍", title:"글로벌 뮤직쇼 1위 도전", field:["vocal","dance","visual","charm"], base:355},
-  52:{type:"award", emoji:"👑", title:"글로벌 뮤직 어워드 · 대상", base:505, final:true},
+  20:{type:"stage", emoji:"📺", title:"첫 음악방송 1위 도전",  field:["vocal","dance","visual","charm"], base:150},
+  28:{type:"stage", emoji:"🎬", title:"음악방송 2연속 1위 도전", field:["vocal","dance","visual","charm"], base:190},
+  36:{type:"award", emoji:"🏆", title:"국내 연말 가요대상",     base:290, gate:true},
+  44:{type:"stage", emoji:"🌍", title:"글로벌 뮤직쇼 1위 도전", field:["vocal","dance","visual","charm"], base:320},
+  52:{type:"award", emoji:"👑", title:"글로벌 뮤직 어워드 · 대상", base:490, final:true},
 };
 
 // ===== 엔딩 도감 (반복 플레이 훅) =====
@@ -1276,6 +1285,26 @@ const Game = {
     setTimeout(()=>URL.revokeObjectURL(a.href),4000);
     toast("이미지를 저장했어! 📸");
   },
+  isMobile(){ return /Android|iPhone|iPad|iPod/i.test(navigator.userAgent||""); },
+  // share가 안 되는 모바일: a.download는 사진첩에 안 들어감 → 이미지 띄워 '길게 눌러 저장' 유도
+  fallbackSave(file){
+    if(this.isMobile()){ this.showCardImage(file); }
+    else { this.downloadCard(file); }
+  },
+  showCardImage(file){
+    const url=URL.createObjectURL(file);
+    const inApp=/KAKAOTALK|FBAN|FBAV|Instagram|Line|NAVER/i.test(navigator.userAgent||"");
+    const ov=document.getElementById("ov"); ov.className="ov on";
+    ov.innerHTML=`<div class="cardsave">
+        <div class="cardsave-tip">📸 아래 이미지를 <b>길게 눌러</b><br>"이미지 저장 / 사진에 추가"를 선택해줘</div>
+        <img class="cardsave-img" src="${url}" alt="결과 카드">
+        ${inApp?`<div class="cardsave-sub">저장이 안 되면 우측 상단 <b>⋮ 메뉴 → 다른 브라우저로 열기</b> 후 다시 시도해줘</div>`:""}
+        <button class="btn ghost" style="margin-top:14px" id="cardsaveClose">닫기</button>
+      </div>`;
+    ov.onclick=null;
+    document.getElementById("cardsaveClose").onclick=(e)=>{ e.stopPropagation();
+      ov.className="ov"; ov.onclick=null; setTimeout(()=>URL.revokeObjectURL(url),1000); };
+  },
   // 저장·공유: 미리 만든 파일을 await 없이 즉시 사용 → 사용자 제스처 유지(안드 크롬 대응)
   shareCard(){
     const r=this.lastResult; if(!r) return;
@@ -1284,10 +1313,10 @@ const Game = {
     const shareData={files:[file],title:"아이돌 육성 타이쿤",
       text:`${r.name} → ${r.ending} (팬 ${fmt(r.fans)}명)`};
     if(navigator.canShare && navigator.canShare({files:[file]})){
-      navigator.share(shareData).catch(e=>{ if(e.name!=="AbortError") this.downloadCard(file); });
+      navigator.share(shareData).catch(e=>{ if(e.name!=="AbortError") this.fallbackSave(file); });
       return;
     }
-    this.downloadCard(file);
+    this.fallbackSave(file);
   },
   // 폴백(카드 미완성 시): 기존 비동기 경로 — 데스크탑 등에서 동작
   async shareCardSlow(){
@@ -1299,7 +1328,7 @@ const Game = {
       if(navigator.canShare && navigator.canShare({files:[file]})){
         try{ await navigator.share(shareData); return; }catch(e){ if(e.name==="AbortError") return; }
       }
-      this.downloadCard(file);
+      this.fallbackSave(file);
     },"image/png");
   },
 
