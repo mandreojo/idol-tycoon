@@ -150,7 +150,7 @@
   .act .d{font-size:10px;color:var(--sub);margin-top:1px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 
   /* overlay */
-  .ov{position:absolute;inset:0;background:rgba(255,240,243,.9);backdrop-filter:blur(6px);
+  .ov{position:fixed;top:0;bottom:0;left:50%;transform:translateX(-50%);width:100%;max-width:480px;background:rgba(255,240,243,.9);backdrop-filter:blur(6px);
     display:none;flex-direction:column;justify-content:center;align-items:center;padding:26px;z-index:20;text-align:center}
   .ov.on{display:flex}
   .roll{font-size:52px;font-weight:900;letter-spacing:-2px;margin-bottom:4px}
