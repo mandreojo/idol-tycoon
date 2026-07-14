@@ -1440,12 +1440,12 @@ const Game = {
     document.getElementById("growthBox").style.display="none";
     const rc=document.getElementById("radar").getContext("2d");
     rc.clearRect(0,0,580,580);
-    ["shareBtn","nameInput","saveBtn"].forEach(id=>document.getElementById(id).style.display="none");
+    ["shareLinkBtn","shareBtn","nameInput","saveBtn"].forEach(id=>{const e=document.getElementById(id);if(e)e.style.display="none";});
     document.getElementById("againBtn").textContent=t("home_btn");
     this.lastResult=null; this.renderBoard(null); show("s-end");
   },
   reset(){
-    ["shareBtn","nameInput","saveBtn"].forEach(id=>document.getElementById(id).style.display="");
+    ["shareLinkBtn","shareBtn","nameInput","saveBtn"].forEach(id=>{const e=document.getElementById(id);if(e)e.style.display="";});
     this.st=null;this.selId=null;this.lastResult=null; show("s-title");
     this.refreshTitle();
   },
