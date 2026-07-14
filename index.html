@@ -103,8 +103,8 @@
   /* 연습실 패널 (빈 공간 채움 + 다음 관문 안내) */
   .practice{display:flex;align-items:center;gap:14px;margin:14px 0 0;padding:12px 16px;
     background:var(--panel);border:1px solid var(--line);border-radius:16px;box-shadow:0 4px 14px rgba(236,58,92,.08)}
-  .pr-buddy{width:58px;height:58px;object-fit:contain;flex:none;
-    animation:prBob 1.5s ease-in-out infinite}
+  .pr-buddy{width:60px;height:60px;object-fit:cover;border-radius:14px;flex:none;
+    box-shadow:0 3px 10px rgba(236,58,92,.18);animation:prBob 1.5s ease-in-out infinite}
   @keyframes prBob{0%,100%{transform:translateY(0) scaleY(1)}50%{transform:translateY(-6px) scaleY(1.04)}}
   .pr-info{flex:1;min-width:0}
   .pr-label{font-size:11px;color:var(--sub);font-weight:700}
@@ -271,14 +271,12 @@
   @keyframes pxfly{0%{opacity:1;transform:translate(0,0) scale(1)}
     100%{opacity:0;transform:translate(var(--dx),var(--dy)) scale(.3)}}
   /* 레티리니 이모티콘 캐릭터 (훈련 씬) */
-  .emo-char{width:134px;height:134px;object-fit:contain;
-    filter:drop-shadow(0 6px 14px rgba(236,58,92,.18));animation:emoBounce .6s ease-in-out infinite}
-  @keyframes emoBounce{0%,100%{transform:translateY(0)}50%{transform:translateY(-9px)}}
-  .emo-pop{animation:emoPop .5s ease-out}
-  @keyframes emoPop{0%{transform:scale(.72)}60%{transform:scale(1.12)}100%{transform:scale(1)}}
-  .emo-great{animation:emoPop .5s ease-out, rxJump .6s cubic-bezier(.3,1.4,.5,1) .2s 2}
-  .emo-dbad{animation:emoShake .42s ease-in-out 3}
-  @keyframes emoShake{0%,100%{transform:translateX(0) rotate(0)}25%{transform:translateX(-7px) rotate(-5deg)}75%{transform:translateX(7px) rotate(5deg)}}
+  .emo-char{width:152px;height:152px;object-fit:cover;border-radius:24px;
+    background:linear-gradient(160deg,#ffe6ec,#fff3f5);box-shadow:0 8px 24px rgba(236,58,92,.2)}
+  .emo-idle{animation:emoIdle 1.7s ease-in-out infinite}
+  @keyframes emoIdle{0%,100%{transform:translateY(0)}50%{transform:translateY(-6px)}}
+  .emo-pop{animation:emoIn .5s cubic-bezier(.3,1.35,.5,1)}
+  @keyframes emoIn{0%{transform:scale(.8);opacity:.3}60%{transform:scale(1.06)}100%{transform:scale(1);opacity:1}}
 
   /* 성장 서사 로그 */
   .growth{background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:12px 14px;
@@ -786,15 +784,14 @@ const Game = {
     const R  = RESULT_FX[jkey] || RESULT_FX.ok;
     // ── Phase 1: 활동 (레티리니 이모티콘) ──
     ov.innerHTML=`<div class="px-stage" id="pxStage">
-        <img class="emo-char" id="emoChar" src="assets/emo/act-${kind}.png" alt="">
+        <img class="emo-char emo-idle" id="emoChar" src="assets/emo/act-${kind}.png" alt="">
         <div class="train-say" id="pxSay">${fx.word}…</div>
       </div>`;
     // ── Phase 2: 결과 (1.1초 뒤 이모티콘 전환) ──
     clearTimeout(this._pxPhase);
     this._pxPhase=setTimeout(()=>{
       const el=document.getElementById('emoChar');
-      if(el){ el.src=`assets/emo/res-${jkey}.png`;
-        el.className='emo-char '+(jkey==='great'?'emo-great':jkey==='dbad'?'emo-dbad':'emo-pop'); }
+      if(el){ el.src=`assets/emo/res-${jkey}.png`; el.className='emo-char emo-pop'; }
       if(R.burst==="party") this.pxSparkle(ov,18,null,false);
       else if(R.burst==="small") this.pxSparkle(ov,7,['#4fd6a0','#5fc9ff','#ffd35c'],false);
       const sayEl=document.getElementById('pxSay');
