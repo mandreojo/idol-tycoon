@@ -297,8 +297,9 @@
     <img id="logo" src="assets/logo.png" alt="최애돌">
     <h1 class="center" style="font-size:21px;margin-top:12px">아이돌 육성 타이쿤</h1>
     <p class="muted center" style="margin-top:9px">
-      최애를 데뷔시키고 세계로.<br>30주 동안 6가지 재능을 키워<br>어떤 슈퍼스타가 되는지 겨뤄봐.</p>
+      최애를 데뷔시키고 세계로.<br>52주 동안 6가지 재능을 키워<br>어떤 슈퍼스타가 되는지 겨뤄봐.</p>
     <div class="spacer"></div>
+    <button class="btn" id="continueBtn" style="display:none;margin-bottom:9px" onclick="Game.continueGame()">▶ 이어하기</button>
     <button class="btn" onclick="Game.goSelect()">최애 고르기 →</button>
     <button class="btn ghost" style="margin-top:9px" onclick="Game.showBoard()">🏆 명예의 전당</button>
     <div class="spacer"></div>
@@ -342,7 +343,7 @@
     </div>
 
     <div class="actbar">
-      <span class="week" id="pWeek">WEEK 1 / 30</span>
+      <span class="week" id="pWeek">WEEK 1 / 52</span>
       <span class="actbanner" id="pAct">Road to Debut</span>
     </div>
 
@@ -399,28 +400,23 @@ const STATS = [
 ];
 const MENTAL = {k:"mental", n:"멘탈", ico:"🧠", c:"#9aa6c9"};
 
-// 등급 F ~ SS
-function grade(v){
-  if(v>=88) return "SS";
-  if(v>=75) return "S";
-  if(v>=62) return "A";
-  if(v>=48) return "B";
-  if(v>=34) return "C";
-  if(v>=20) return "D";
-  if(v>=8)  return "E";
-  return "F";
-}
+// 등급 F ~ SS — 스탯은 누적 포인트 P. 100마다 등급 1개↑ (게이지 꽉차면 등급업).
+// level 0~7 = F E D C B A S SS. 게이지 = 현재 등급 안에서의 진행도(0~100).
+const GRADES=["F","E","D","C","B","A","S","SS"];
+function levelOf(p){ return Math.min(7, Math.floor(Math.max(0,p)/100)); }
+function progOf(p){ return levelOf(p)>=7 ? 100 : Math.floor(Math.max(0,p)%100); } // 게이지 표시값
+function grade(p){ return GRADES[levelOf(p)]; }
 const GRADE_COLOR={SS:"#ffd35c",S:"#ff5fa2",A:"#c48bff",B:"#5fc9ff",C:"#4fd6a0",D:"#8f9bbf",E:"#77809e",F:"#606784"};
 
-// 타고난 재능 (특기 기반 — 검색·커스텀 공통)
+// 타고난 재능 (특기 기반 — 검색·커스텀 공통). 스탯은 누적 P 스케일(0~800).
 function talentOf(spec){
   const keys = STATS.map(s=>s.k);
   if(!keys.includes(spec)) spec=keys[0];
-  const base = {}; keys.forEach(k=>base[k]=10);
-  base.mental=38;
-  base[spec] += 10;                                   // 특기
+  const base = {}; keys.forEach(k=>base[k]=12);
+  base.mental=42;
+  base[spec] += 18;                                   // 특기 (초기 살짝 앞섬)
   const si=keys.indexOf(spec);
-  base[keys[(si+3)%keys.length]] += 4;                // 준특기(맞은편)
+  base[keys[(si+3)%keys.length]] += 2;                // 준특기(맞은편)
   return {base, spec};
 }
 
@@ -464,117 +460,114 @@ function rollJudge(cond, mental){
   return "ok";
 }
 const JUDGE = {
-  dbad:{cls:"dc", label:"대실패…", emoji:"💥", mult:-0.6, cond:-24, fanMult:0.2},
-  fail:{cls:"f",  label:"실패",    emoji:"😥", mult:0.25, cond:-14, fanMult:0.4},
+  dbad:{cls:"dc", label:"대실패…", emoji:"💥", mult:-0.5, cond:-24, fanMult:0.2},
+  fail:{cls:"f",  label:"실패",    emoji:"😥", mult:0.28, cond:-14, fanMult:0.4},
   ok:  {cls:"s",  label:"성공!",   emoji:"👍", mult:1.0,  cond:-9,  fanMult:1.0},
   great:{cls:"dg",label:"대성공!!",emoji:"🔥", mult:2.1,  cond:-4,  fanMult:2.3},
 };
 
-// 성장곡선(우하향, 등급 대비 극적): F~C 쭉쭉 → A부터 뻑뻑 → S~SS 기어가듯.
-// 낮을 땐 금방, 만점 갈수록 죽어라 안 오름(공부 0→50은 쉽고 만점은 어려운 논리).
-function growthMult(v){
-  let m;
-  if(v < 55) m = 1.45 - v*0.010;      //  0:1.45 → 30:1.15 → 55:0.90   (F~C 쭉쭉)
-  else       m = 0.90 - (v-55)*0.017; // 55:0.90 → 75:0.56 → 88:0.34 → 100:0.14  (A→S→SS 급감속)
-  return Math.max(0.10, m);
-}
+// 성장곡선(등급별 계단식 우하향): 낮은 등급 쭉쭉(도파민) → 높은 등급 뻑뻑.
+// level 0~7 = F E D C B A S SS. 등급 오를수록 같은 훈련이 덜 오름.
+const GROWTH_BY_LEVEL=[2.6, 2.4, 2.1, 1.75, 1.35, 0.92, 0.5, 0.24];
+function growthMult(p){ return GROWTH_BY_LEVEL[levelOf(p)]; }
 
 // 선택지 두 종류:
 //  · 확정형: {t, fx}                       → 고르면 바로 적용
 //  · 분기형: {t, odds:s=>p, win:{...}, lose:{...}}  → 주사위로 성공/실패 갈림 (스탯·컨디션 높을수록 성공↑)
+// 리스크(분기형) win 보상은 일반 훈련 한방(대성공급)보다 크게 — 리스크 테이킹이 이득이 되도록.
 const EVENTS = [
   // ── 분기형 (도전·리스크) ──
   {emoji:"📺", title:"예능 대박 각?", text:"인기 예능 고정 자리가 걸린 파일럿. 잘 살리면 화제성 폭발, 삐끗하면 편집 굴욕.",
    choices:[
-     {t:"끼 발산하며 올인", odds:s=>0.40+s.charm/200+s.cond/500,
-       win:{label:"예능 캐 각인!",emoji:"🤩",desc:"끼 <b>+9</b> · 팬 <b>대폭↑</b> · 컨디션 <b>-10</b>",
-            fx:s=>{s.charm+=9;s.fans+=Math.round(700+s.charm*22);s.cond-=10;}},
-       lose:{label:"통편집…",emoji:"✂️",desc:"멘탈 <b>-7</b> · 컨디션 <b>-8</b> · 팬 소폭",
-            fx:s=>{s.mental-=7;s.cond-=8;s.fans+=90;}}},
-     {t:"연습에 집중 (멘탈 +6)", fx:s=>{s.mental+=6;}},
+     {t:"끼 발산하며 올인", odds:s=>0.40+s.charm/1400+s.cond/500,
+       win:{label:"예능 캐 각인!",emoji:"🤩",desc:"끼 <b>+28</b> · 팬 <b>대폭↑</b> · 컨디션 <b>-10</b>",
+            fx:s=>{s.charm+=28;s.fans+=Math.round(1500+s.charm*4);s.cond-=10;}},
+       lose:{label:"통편집…",emoji:"✂️",desc:"멘탈 <b>-8</b> · 컨디션 <b>-8</b> · 팬 소폭",
+            fx:s=>{s.mental-=8;s.cond-=8;s.fans+=120;}}},
+     {t:"연습에 집중 (멘탈 +7)", fx:s=>{s.mental+=7;}},
    ]},
   {emoji:"🎬", title:"드라마 조연 캐스팅", text:"연기돌로 갈 기회. 근데 발연기 논란 나면 이미지 타격이 커.",
    choices:[
-     {t:"연기 도전", odds:s=>0.35+s.acting/160+s.mental/500,
-       win:{label:"인생 조연!",emoji:"🎬",desc:"연기 <b>+11</b> · 팬 <b>↑↑</b> · 컨디션 <b>-12</b>",
-            fx:s=>{s.acting+=11;s.fans+=Math.round(600);s.cond-=12;}},
-       lose:{label:"발연기 논란",emoji:"😬",desc:"연기 <b>+4</b> · 멘탈 <b>-6</b> · 팬 <b>↓</b>",
-            fx:s=>{s.acting+=4;s.mental-=6;s.fans=Math.round(s.fans*0.96);}}},
-     {t:"음악에 집중 (보컬 +5)", fx:s=>{s.vocal+=5;}},
+     {t:"연기 도전", odds:s=>0.35+s.acting/1100+s.mental/500,
+       win:{label:"인생 조연!",emoji:"🎬",desc:"연기 <b>+34</b> · 팬 <b>↑↑</b> · 컨디션 <b>-12</b>",
+            fx:s=>{s.acting+=34;s.fans+=Math.round(1600);s.cond-=12;}},
+       lose:{label:"발연기 논란",emoji:"😬",desc:"연기 <b>+10</b> · 멘탈 <b>-7</b> · 팬 <b>↓</b>",
+            fx:s=>{s.acting+=10;s.mental-=7;s.fans=Math.round(s.fans*0.95);}}},
+     {t:"음악에 집중 (보컬 +14)", fx:s=>{s.vocal+=14;}},
    ]},
   {emoji:"📹", title:"편집 없는 生라이브", text:"실시간 소통 라이브 제안. 날것 그대로라 리스크가 커.",
    choices:[
-     {t:"생방송 강행", odds:s=>0.45+s.charm/220+s.mental/500,
-       win:{label:"라이브 레전드!",emoji:"🎥",desc:"끼 <b>+7</b> · 팬 <b>대폭↑</b>",
-            fx:s=>{s.charm+=7;s.fans+=Math.round(650+s.charm*15);s.cond-=6;}},
-       lose:{label:"방송사고…",emoji:"📵",desc:"멘탈 <b>-8</b> · 컨디션 <b>-6</b>",
-            fx:s=>{s.mental-=8;s.cond-=6;s.fans+=60;}}},
-     {t:"녹화로 안전하게 (끼 +3)", fx:s=>{s.charm+=3;}},
+     {t:"생방송 강행", odds:s=>0.45+s.charm/1300+s.mental/500,
+       win:{label:"라이브 레전드!",emoji:"🎥",desc:"끼 <b>+24</b> · 팬 <b>대폭↑</b>",
+            fx:s=>{s.charm+=24;s.fans+=Math.round(1400+s.charm*3);s.cond-=6;}},
+       lose:{label:"방송사고…",emoji:"📵",desc:"멘탈 <b>-9</b> · 컨디션 <b>-6</b>",
+            fx:s=>{s.mental-=9;s.cond-=6;s.fans+=90;}}},
+     {t:"녹화로 안전하게 (끼 +12)", fx:s=>{s.charm+=12;}},
    ]},
   {emoji:"🕺", title:"챌린지 열풍", text:"네 안무 클립이 SNS에서 도는 중. 챌린지 유행을 노려볼까?",
    choices:[
-     {t:"댄스 챌린지 점화", odds:s=>0.42+s.dance/200+s.visual/600,
-       win:{label:"떡상 챌린지!",emoji:"🔥",desc:"댄스 <b>+8</b> · 팬 <b>폭발↑</b>",
-            fx:s=>{s.dance+=8;s.fans+=Math.round(900+s.dance*18);}},
-       lose:{label:"묻힘…",emoji:"🥲",desc:"댄스 <b>+3</b> · 팬 소폭",
-            fx:s=>{s.dance+=3;s.fans+=120;}}},
-     {t:"완성도 더 높이기 (댄스 +5)", fx:s=>{s.dance+=5;}},
+     {t:"댄스 챌린지 점화", odds:s=>0.42+s.dance/1300+s.visual/2000,
+       win:{label:"떡상 챌린지!",emoji:"🔥",desc:"댄스 <b>+30</b> · 팬 <b>폭발↑</b>",
+            fx:s=>{s.dance+=30;s.fans+=Math.round(2000+s.dance*4);}},
+       lose:{label:"묻힘…",emoji:"🥲",desc:"댄스 <b>+9</b> · 팬 소폭",
+            fx:s=>{s.dance+=9;s.fans+=200;}}},
+     {t:"완성도 더 높이기 (댄스 +14)", fx:s=>{s.dance+=14;}},
    ]},
   {emoji:"💄", title:"명품 브랜드 CF", text:"글로벌 브랜드 광고 제안. 비주얼 승부라 부담도 커.",
    choices:[
-     {t:"메인 모델 도전", odds:s=>0.38+s.visual/180+s.charm/600,
-       win:{label:"브랜드 뮤즈!",emoji:"👑",desc:"비주얼 <b>+9</b> · 팬 <b>↑↑</b>",
-            fx:s=>{s.visual+=9;s.fans+=Math.round(800);}},
-       lose:{label:"이미지 안 맞음",emoji:"🫤",desc:"비주얼 <b>+3</b> · 멘탈 <b>-4</b>",
-            fx:s=>{s.visual+=3;s.mental-=4;}}},
-     {t:"내실부터 다지기 (비주얼 +4)", fx:s=>{s.visual+=4;}},
+     {t:"메인 모델 도전", odds:s=>0.38+s.visual/1200+s.charm/2000,
+       win:{label:"브랜드 뮤즈!",emoji:"👑",desc:"비주얼 <b>+30</b> · 팬 <b>↑↑</b>",
+            fx:s=>{s.visual+=30;s.fans+=Math.round(1800);}},
+       lose:{label:"이미지 안 맞음",emoji:"🫤",desc:"비주얼 <b>+9</b> · 멘탈 <b>-5</b>",
+            fx:s=>{s.visual+=9;s.mental-=5;}}},
+     {t:"내실부터 다지기 (비주얼 +12)", fx:s=>{s.visual+=12;}},
    ]},
   {emoji:"🎙️", title:"서바이벌 프로 출연", text:"경연 프로에서 실력 검증 무대. 이기면 급상승, 지면 굴욕.",
    choices:[
-     {t:"경연 참가", odds:s=>0.30+(s.vocal+s.dance)/400+s.cond/500,
-       win:{label:"올킬 무대!",emoji:"🏅",desc:"보컬·댄스 <b>+6</b> · 팬 <b>대폭↑</b>",
-            fx:s=>{s.vocal+=6;s.dance+=6;s.fans+=Math.round(1000);s.cond-=10;}},
-       lose:{label:"탈락…",emoji:"💧",desc:"멘탈 <b>-9</b> · 컨디션 <b>-8</b>",
-            fx:s=>{s.mental-=9;s.cond-=8;s.fans+=100;}}},
+     {t:"경연 참가", odds:s=>0.30+(s.vocal+s.dance)/2600+s.cond/500,
+       win:{label:"올킬 무대!",emoji:"🏅",desc:"보컬·댄스 <b>+20</b> · 팬 <b>대폭↑</b>",
+            fx:s=>{s.vocal+=20;s.dance+=20;s.fans+=Math.round(2200);s.cond-=10;}},
+       lose:{label:"탈락…",emoji:"💧",desc:"멘탈 <b>-10</b> · 컨디션 <b>-8</b>",
+            fx:s=>{s.mental-=10;s.cond-=8;s.fans+=140;}}},
      {t:"기권하고 컨디션 관리 (컨디션 +12)", fx:s=>{s.cond=Math.min(100,s.cond+12);}},
    ]},
   {emoji:"💞", title:"열애설 보도", text:"근거 약한 열애설이 터졌어. 대응이 관건이야.",
    choices:[
      {t:"쿨하게 정면 대응", odds:s=>0.50+s.mental/300,
-       win:{label:"대인배 인정!",emoji:"😎",desc:"멘탈 <b>+5</b> · 팬 <b>↑</b>",
-            fx:s=>{s.mental+=5;s.fans+=Math.round(400);}},
-       lose:{label:"논란 확산",emoji:"🌪️",desc:"멘탈 <b>-8</b> · 팬 <b>↓</b>",
-            fx:s=>{s.mental-=8;s.fans=Math.round(s.fans*0.94);}}},
+       win:{label:"대인배 인정!",emoji:"😎",desc:"멘탈 <b>+8</b> · 팬 <b>↑</b>",
+            fx:s=>{s.mental+=8;s.fans+=Math.round(900);}},
+       lose:{label:"논란 확산",emoji:"🌪️",desc:"멘탈 <b>-9</b> · 팬 <b>↓</b>",
+            fx:s=>{s.mental-=9;s.fans=Math.round(s.fans*0.93);}}},
      {t:"소속사에 맡기고 잠수 (컨디션 +10)", fx:s=>{s.cond=Math.min(100,s.cond+10);}},
    ]},
   // ── 확정형 (트레이드오프·회복) ──
   {emoji:"🎁", title:"열성팬의 서포트", text:"팬들이 자발적으로 지하철·버스 광고를 걸어줬어!",
    choices:[
-     {t:"고맙게 화답 (팬 대폭 ↑)", fx:s=>{s.fans+=Math.round(500+s.fans*0.05);}},
+     {t:"고맙게 화답 (팬 대폭 ↑)", fx:s=>{s.fans+=Math.round(900+s.fans*0.05);}},
    ]},
   {emoji:"🎼", title:"자작곡 떡밥", text:"작업하던 데모 반응이 좋아. 자컨·자작곡 아티스트로?",
    choices:[
-     {t:"공개한다 (크리에이티브 +8, 팬 ↑)", fx:s=>{s.creative+=8;s.fans+=Math.round(350);}},
-     {t:"더 다듬는다 (멘탈 +5)", fx:s=>{s.mental+=5;}},
+     {t:"공개한다 (크리에이티브 +24, 팬 ↑)", fx:s=>{s.creative+=24;s.fans+=Math.round(900);}},
+     {t:"더 다듬는다 (멘탈 +6)", fx:s=>{s.mental+=6;}},
    ]},
   {emoji:"🤕", title:"연습 중 부상", text:"무리한 안무로 발목을 삐끗했어.",
    choices:[
      {t:"쉬어간다 (컨디션 +20)", fx:s=>{s.cond=Math.min(100,s.cond+20);}},
-     {t:"참고 강행 (댄스 +6, 컨디션 -18)", fx:s=>{s.dance+=6;s.cond-=18;}},
+     {t:"참고 강행 (댄스 +18, 컨디션 -18)", fx:s=>{s.dance+=18;s.cond-=18;}},
    ]},
   {emoji:"🧧", title:"팬사인회", text:"오프라인에서 팬들을 직접 만나는 날. 소통으로 팬심을 다져.",
    choices:[
-     {t:"한 명 한 명 눈맞춤 (팬 ↑, 멘탈 +3)", fx:s=>{s.fans+=Math.round(350+s.fans*0.03);s.mental+=3;}},
+     {t:"한 명 한 명 눈맞춤 (팬 ↑, 멘탈 +4)", fx:s=>{s.fans+=Math.round(700+s.fans*0.03);s.mental+=4;}},
    ]},
   {emoji:"🛌", title:"번아웃 경보", text:"쉼 없이 달렸더니 몸이 보내는 신호가 왔어.",
    choices:[
-     {t:"과감히 휴가 (컨디션 +26, 멘탈 +5)", fx:s=>{s.cond=Math.min(100,s.cond+26);s.mental+=5;}},
-     {t:"그래도 스케줄 소화 (모든 스탯 +2, 컨디션 -12)", fx:s=>{STATS.forEach(x=>s[x.k]+=2);s.cond-=12;}},
+     {t:"과감히 휴가 (컨디션 +26, 멘탈 +6)", fx:s=>{s.cond=Math.min(100,s.cond+26);s.mental+=6;}},
+     {t:"그래도 스케줄 소화 (모든 스탯 +8, 컨디션 -12)", fx:s=>{STATS.forEach(x=>s[x.k]+=8);s.cond-=12;}},
    ]},
   {emoji:"🌐", title:"해외 팬미팅 투어", text:"글로벌 팬덤이 커지는 중. 해외 일정을 잡을까?",
    choices:[
-     {t:"강행군 (비주얼·끼 +4, 컨디션 -16, 팬 ↑↑)", fx:s=>{s.visual+=4;s.charm+=4;s.cond-=16;s.fans+=700;}},
-     {t:"국내 집중 (팬 +안정)", fx:s=>{s.fans+=250;}},
+     {t:"강행군 (비주얼·끼 +14, 컨디션 -16, 팬 ↑↑)", fx:s=>{s.visual+=14;s.charm+=14;s.cond-=16;s.fans+=1400;}},
+     {t:"국내 집중 (팬 +안정)", fx:s=>{s.fans+=600;}},
    ]},
 ];
 
@@ -582,12 +575,15 @@ const EVENTS = [
 const RIVAL_POOL  = ["스텔라","네온사인","루나틱스","블랙로즈","아이리스","프리즘","코스모스","벨벳나잇","하이퍼노바","오로라"];
 const RIVAL_EMOJI = ["💫","⚡","🌙","🥀","🌸","🔮","🌌","🖤","✴️","🌠"];
 // type: stage(무대 퍼포먼스=보컬·댄스·비주얼·끼) / award(시상식=종합력+팬)
-// base: 라이벌 기대 파워 기준선(주차 진행에 따라 상승). gate: 실패시 탈락 관문. final: 최종.
+// base: 라이벌 기대 파워 기준선(P 스케일, 밸런스 시뮬로 확정). gate: 실패시 탈락 관문. final: 최종.
+// 52주 3막: 데뷔 12주 / 국내 20·28 / 국내대상 36(월드 진출 관문) / 월드 44 / 글로벌대상 52.
+const AWARD_PEAK_K = 0.34;   // 시상식에서 원톱 스탯 반영 계수(낮을수록 몰빵 불리)
 const COMPETS = {
-  15:{type:"stage", emoji:"📺", title:"첫 음악방송 1위 도전",  field:["vocal","dance","visual","charm"], base:33},
-  20:{type:"award", emoji:"🏆", title:"국내 연말 가요대상",     base:44, gate:true},
-  25:{type:"stage", emoji:"🌍", title:"글로벌 뮤직쇼 1위 도전", field:["vocal","dance","visual","charm"], base:52},
-  30:{type:"award", emoji:"👑", title:"글로벌 뮤직 어워드 · 대상", base:62, final:true},
+  20:{type:"stage", emoji:"📺", title:"첫 음악방송 1위 도전",  field:["vocal","dance","visual","charm"], base:165},
+  28:{type:"stage", emoji:"🎬", title:"음악방송 2연속 1위 도전", field:["vocal","dance","visual","charm"], base:210},
+  36:{type:"award", emoji:"🏆", title:"국내 연말 가요대상",     base:320, gate:true},
+  44:{type:"stage", emoji:"🌍", title:"글로벌 뮤직쇼 1위 도전", field:["vocal","dance","visual","charm"], base:355},
+  52:{type:"award", emoji:"👑", title:"글로벌 뮤직 어워드 · 대상", base:505, final:true},
 };
 
 const Game = {
@@ -685,11 +681,12 @@ const Game = {
     const {base} = talentOf(idol.spec);
     this.st = {idol, ...base, cond:100, fans:0, week:1, busy:false, log:[]};
     this.logWeek(`<b>${esc(idol.name)}</b> 데뷔 프로젝트 시작 — 함께 월드스타를 향해!`);
+    this.save();
     this.cutscene({act:"ACT 1", emoji:"🎬", title:"데뷔를 향해", sub:"ROAD TO DEBUT",
-      talk:`${idol.name}, 데뷔 준비 시작! 30주 동안 키워서 월드스타로 만들어보자 🔥`},
-      ()=>{ show("s-play"); this.render(); toast(`${idol.name} 육성 시작!`); });
+      talk:`${idol.name}, 데뷔 준비 시작! 52주 동안 키워서 월드스타로 만들어보자 🔥`},
+      ()=>{ show("s-play"); this.startWeek(); toast(`${idol.name} 육성 시작!`); });
   },
-  actName(w){ return w<=10?"Road to Debut":w<=20?"Domestic Market":"Road to World"; },
+  actName(w){ return w<=12?"Road to Debut":w<=36?"Domestic Market":"Road to World"; },
 
   render(){
     const s=this.st, idol=s.idol;
@@ -699,24 +696,29 @@ const Game = {
     document.getElementById("pName").textContent=idol.name;
     document.getElementById("pChip").textContent=idol.grp;
     document.getElementById("pFans").textContent=fmt(s.fans);
-    document.getElementById("pWeek").textContent=`WEEK ${s.week} / 30`;
+    document.getElementById("pWeek").textContent=`WEEK ${s.week} / 52`;
     document.getElementById("pAct").textContent=this.actName(s.week);
     const cb=document.getElementById("condBar");
     cb.style.width=Math.max(0,s.cond)+"%";
     cb.style.background = s.cond>55?"var(--good)":s.cond>25?"var(--visual)":"var(--bad)";
     document.getElementById("condTxt").textContent=Math.max(0,Math.round(s.cond));
     document.getElementById("statBox").innerHTML=[...STATS,MENTAL].map(st=>{
-      const v=Math.round(s[st.k]); const g=grade(v);
-      const badge = st.k==="mental" ? "" :
-        `<span class="gbadge" style="background:${GRADE_COLOR[g]}">${g}</span>`;
+      if(st.k==="mental"){
+        const mv=Math.round(s.mental);
+        return `<div class="stat" data-k="mental"><span class="k">${st.ico} ${st.n}</span>
+          <span class="bar"><i style="width:${Math.min(100,mv)}%;background:${st.c}"></i></span>
+          <span class="v">${mv}</span></div>`;
+      }
+      const p=Math.round(s[st.k]); const g=grade(p); const prog=progOf(p);
       return `<div class="stat" data-k="${st.k}"><span class="k">${st.ico} ${st.n}</span>
-        <span class="bar"><i style="width:${Math.min(100,v)}%;background:${st.c}"></i></span>
-        <span class="v">${v}</span>${badge}</div>`;
+        <span class="bar"><i style="width:${prog}%;background:${st.c}"></i></span>
+        <span class="v">${prog}</span>
+        <span class="gbadge" style="background:${GRADE_COLOR[g]}">${g}</span></div>`;
     }).join("");
     // 연습실 패널: 도트 버디 + 다음 관문 D-day + 진행바
     const sex=(idol.cat==="M")?"m":"f";
-    const MS=[{w:10,t:"🎤 데뷔 심사"},{w:15,t:"📺 음악방송 1위 도전"},{w:20,t:"🏆 국내 연말 가요대상"},
-              {w:25,t:"🌍 글로벌 뮤직쇼"},{w:30,t:"👑 글로벌 대상"}];
+    const MS=[{w:12,t:"🎤 데뷔 심사"},{w:20,t:"📺 음악방송 1위 도전"},{w:28,t:"🎬 음방 2연속 1위"},
+              {w:36,t:"🏆 국내 연말 가요대상"},{w:44,t:"🌍 글로벌 뮤직쇼"},{w:52,t:"👑 글로벌 대상"}];
     const nx=MS.find(m=>m.w>=s.week)||MS[MS.length-1];
     const prevW=(MS.filter(m=>m.w<nx.w).map(m=>m.w).pop())||0;
     const prog=Math.max(6,Math.min(100,Math.round((s.week-prevW)/(nx.w-prevW)*100)));
@@ -752,21 +754,21 @@ const Game = {
     }
     const j=rollJudge(s.cond,s.mental), J=JUDGE[j];
     const stat=STATS.find(x=>x.k===kind);
-    const baseGain=6+Math.round(Math.random()*3);
+    const baseGain=19+Math.round(Math.random()*6);
     // 히든 특기 가점: 타고난 특기 훈련이 더 잘 자람 (준특기는 소폭). UI엔 안 보임.
     const keys=STATS.map(x=>x.k), si=keys.indexOf(s.idol.spec);
-    const talent = kind===s.idol.spec ? 1.2 : (kind===keys[(si+3)%keys.length] ? 1.1 : 1.0);
+    const talent = kind===s.idol.spec ? 1.22 : (kind===keys[(si+3)%keys.length] ? 1.1 : 1.0);
     let gain = J.mult>0 ? Math.round(baseGain*J.mult*growthMult(s[kind])*talent)
                         : Math.round(baseGain*J.mult);
-    const oldV=Math.round(s[kind]), oldG=grade(oldV);
+    const oldV=Math.round(s[kind]), oldG=grade(oldV), oldL=levelOf(oldV);
     s[kind]=Math.max(0,s[kind]+gain);
     s.cond=Math.max(0,s.cond+J.cond);
     if(j==="dbad") s.mental=Math.max(0,s.mental-6);
-    const fanGain=Math.round((30+s[kind]*3)*J.fanMult);
+    const fanGain=Math.round((30+s[kind]*0.6)*J.fanMult);
     s.fans+=fanGain;
-    const newV=Math.round(s[kind]), newG=grade(newV);
+    const newV=Math.round(s[kind]), newG=grade(newV), newL=levelOf(newV);
     const sign=gain>=0?"+":"";
-    const gradeUp = newG!==oldG && newV>oldV;
+    const gradeUp = newL>oldL;   // 게이지 100 넘겨 등급 상승
     if(gradeUp) this.logWeek(`${stat.ico} <b>${stat.n}</b>가 <b style="color:var(--accent)">${oldG}→${newG}</b> 등급으로 올랐어!`);
     const say={dbad:"으악, 망했다…😵",fail:"아쉬워…😥",ok:"좋았어! 👍",great:"완전 대박이야!! 🔥"}[j]||"";
     this.trainReveal(s.idol, kind, j, J,
@@ -824,21 +826,29 @@ const Game = {
     }
   },
 
-  // 게이지 채우기 + 숫자 카운트업 + 등급 상승 팝 (시각 강조)
+  // 게이지 채우기 + 숫자 카운트업 + 등급 상승 팝. 게이지 100 채우면 리셋되며 등급업.
   bumpStat(kind, oldV, newV, oldG, newG){
     const box=document.getElementById("statBox");
     const row=box && box.querySelector(`.stat[data-k="${kind}"]`);
     if(!row) return;
     const bar=row.querySelector('.bar > i'), numEl=row.querySelector('.v'), badge=row.querySelector('.gbadge');
-    if(bar){ bar.style.transition='none'; bar.style.width=Math.min(100,oldV)+'%';
-      void bar.offsetWidth;
-      bar.style.transition='width .7s cubic-bezier(.3,.8,.4,1)';
-      bar.style.width=Math.min(100,newV)+'%'; }
-    if(numEl) countUp(numEl, oldV, newV, 700);
+    const oldP=progOf(oldV), newP=progOf(newV);
+    const levelUp = levelOf(newV)>levelOf(oldV);
+    if(bar){
+      bar.style.transition='none'; bar.style.width=oldP+'%'; void bar.offsetWidth;
+      if(levelUp){
+        bar.style.transition='width .4s cubic-bezier(.3,.8,.4,1)'; bar.style.width='100%';
+        setTimeout(()=>{ bar.style.transition='none'; bar.style.width='0%'; void bar.offsetWidth;
+          bar.style.transition='width .55s cubic-bezier(.3,.8,.4,1)'; bar.style.width=newP+'%'; }, 430);
+      } else {
+        bar.style.transition='width .7s cubic-bezier(.3,.8,.4,1)'; bar.style.width=newP+'%';
+      }
+    }
+    if(numEl){ if(levelUp) setTimeout(()=>countUp(numEl,0,newP,550),450); else countUp(numEl,oldP,newP,700); }
     row.classList.remove('bump'); void row.offsetWidth; row.classList.add('bump');
     setTimeout(()=>row.classList.remove('bump'), 760);
-    if(badge && newG!==oldG){ setTimeout(()=>{ badge.classList.add('pop');
-      setTimeout(()=>badge.classList.remove('pop'), 700); }, 420); }
+    if(badge && levelUp){ setTimeout(()=>{ badge.textContent=newG; badge.style.background=GRADE_COLOR[newG];
+      badge.classList.add('pop'); setTimeout(()=>badge.classList.remove('pop'), 700); }, 450); }
   },
 
   logWeek(html){ if(!this.st.log) this.st.log=[]; this.st.log.push(`<b>W${this.st.week}</b> · ${html}`); },
@@ -856,14 +866,31 @@ const Game = {
     },600);
   },
 
-  afterTurn(){
-    const s=this.st;
-    if(s.week===10){ this.render(); return this.debutJudge(); }
-    if(COMPETS[s.week]){ this.render(); return this.runCompet(s.week); }
-    if(s.week>=2 && Math.random()<0.25){ this.render(); return this.showEvent(()=>this.nextWeek()); }
-    this.nextWeek();
+  // 훈련 끝 → 다음 주로. (관문·이벤트는 '주 시작'에서 처리 — 훈련효과와 분리)
+  afterTurn(){ this.nextWeek(); },
+  nextWeek(){ this.st.week++; this.st.busy=false; this.save(); this.startWeek(); },
+  // 주 시작: 데뷔/관문이면 바로 진행, 아니면 확률로 이벤트 → 닫으면 그 주 훈련 선택
+  startWeek(){
+    const s=this.st, w=s.week;
+    s.busy=false;
+    if(w===12){ this.render(); return this.debutJudge(); }
+    if(COMPETS[w]){ this.render(); return this.runCompet(w); }
+    this.render();
+    if(w>=3 && Math.random()<0.25){ s.busy=true; this.showEvent(()=>{ s.busy=false; this.render(); }); }
   },
-  nextWeek(){ this.st.week++; this.st.busy=false; this.render(); },
+
+  // ===== 중간 저장(localStorage) =====
+  save(){ try{ if(this.st) localStorage.setItem("idol_save", JSON.stringify(this.st)); }catch(e){} },
+  clearSave(){ try{ localStorage.removeItem("idol_save"); }catch(e){} },
+  hasSave(){ try{ return !!localStorage.getItem("idol_save"); }catch(e){ return false; } },
+  continueGame(){
+    let raw; try{ raw=localStorage.getItem("idol_save"); }catch(e){}
+    if(!raw){ toast("저장된 게임이 없어"); return; }
+    try{ this.st=JSON.parse(raw); }catch(e){ toast("저장 파일을 못 읽었어"); this.clearSave(); return; }
+    if(!this.st.log) this.st.log=[];
+    show("s-play"); this.startWeek();
+    toast(`WEEK ${this.st.week}부터 이어서!`);
+  },
 
   showEvent(done){
     const ev=EVENTS[Math.floor(Math.random()*EVENTS.length)], s=this.st;
@@ -903,8 +930,8 @@ const Game = {
     const s=this.st;
     const total=STATS.reduce((a,st)=>a+s[st.k],0);
     const peak=Math.max(...STATS.map(st=>s[st.k]));
-    const pass = total>=110 || peak>=45;
-    const bonus = pass ? Math.round(1500+total*8) : Math.round(total*3);
+    const pass = total>=340 || peak>=150;
+    const bonus = pass ? Math.round(1500+total*4) : Math.round(total*2);
     s.fans+=bonus;
     this.logWeek(pass?`🎊 <b>데뷔 성공!</b> 화려하게 데뷔했어`:`😅 <b>언더독 데뷔</b> — 아슬아슬 무대에 섰어`);
     const ov=document.getElementById("ov"); ov.className="ov on"; ov.onclick=null;
@@ -925,8 +952,8 @@ const Game = {
     } else {
       const avg=STATS.reduce((a,st)=>a+s[st.k],0)/6;               // 종합력(시상식 주력)
       const peak=Math.max(...STATS.map(st=>s[st.k]));              // 원톱 한 방도 일부 반영
-      const metric=Math.max(avg, peak*0.38);
-      mine = metric * (1 + Math.min(0.45, s.fans/45000)) * (0.9 + Math.random()*0.2);
+      const metric=Math.max(avg, peak*AWARD_PEAK_K);
+      mine = metric * (1 + Math.min(0.45, s.fans/60000)) * (0.9 + Math.random()*0.2);
     }
     const idxs=[]; while(idxs.length<3){ const r=Math.floor(Math.random()*RIVAL_POOL.length); if(!idxs.includes(r)) idxs.push(r); }
     const rivals=idxs.map(i=>({name:RIVAL_POOL[i], emoji:RIVAL_EMOJI[i], score:c.base*(0.75+Math.random()*0.5), me:false}));
@@ -1029,38 +1056,48 @@ const Game = {
     const arr=STATS.map(st=>({...st, v:s[st.k]})).sort((a,b)=>b.v-a.v);
     const top=arr[0], total=arr.reduce((a,b)=>a+b.v,0), minV=arr[arr.length-1].v;
     const gap=top.v-arr[1].v;
-
-    if(!reachedWorld){
-      if(total<150) return {emoji:"💔",name:"팀 해체",tier:"F",
-        sub:`합계 ${Math.round(total)}. 국내의 벽을 넘지 못하고 해체됐어… 다음 생엔 꼭.`};
-      return {emoji:"🌗",name:`${top.n} 지역 스타`,tier:"C",
-        sub:`국내 대상 1위는 놓쳤지만 ${top.n} 하나로 단단한 마니아 팬층을 남겼어.`};
-    }
-    const champ=finalRank===1, podium=finalRank<=3;
-    const superA = minV>=60 && total>=360;
-    const onetop  = top.v>=82 && gap>=24;
-    const allround= minV>=50 && total>=315;
-    const solid   = minV>=38 && total>=255;
+    const stage4=(s.vocal+s.dance+s.visual+s.charm)/4;   // 무대 4종 평균
+    const stageStar = stage4>=440 && minV<340;            // 무대 특화(연기·크리 낮음)
     const onetopTitles={vocal:"세계가 인정한 보컬리스트",dance:"월드클래스 퍼포머",
       visual:"글로벌 비주얼 아이콘",charm:"예능·화제성 끝판왕",
       acting:"스크린을 접수한 배우돌",creative:"자컨·자작곡 아티스트"};
+
+    if(!reachedWorld){
+      if(total<680 && top.v<430) return {emoji:"💔",name:"팀 해체",tier:"F",
+        sub:`국내의 벽을 넘지 못하고 해체됐어… 다음 생엔 꼭.`};
+      if(stageStar) return {emoji:"🎭",name:"무대형 지역 스타",tier:"C",
+        sub:`무대 위에선 빛났지만 국내 대상의 벽은 높았어. 무대장악력은 진짜였어.`};
+      return {emoji:"🌗",name:`${top.n} 지역 스타`,tier:"C",
+        sub:`국내 대상 1위는 놓쳤지만 <b>${top.n}</b> 하나로 단단한 마니아 팬층을 남겼어.`};
+    }
+    const champ=finalRank===1, podium=finalRank<=3;
+    const superA = minV>=410 && total>=2750;   // 6각 모두 A이상
+    const onetop  = top.v>=620 && gap>=180;      // 한 스탯 S~SS 원톱
+    const allround= minV>=340 && total>=2400;
+    const solid   = minV>=230 && total>=1900;
 
     // SS — 6각 완성 (실력이 SS급, 순위 무관)
     if(superA) return {emoji:"🌟",name:"글로벌 육각형 슈퍼스타",tier:"SS",
       sub:`약점이 없어. 6가지 재능 모두 정상급인 완성형 월드스타.${champ?" 글로벌 대상까지 석권한 역대급이야.":" 역대급이야."}`};
     // S — 대상 1위 + 원톱
     if(champ && onetop) return {emoji:"👑",name:onetopTitles[top.k],tier:"S",
-      sub:`${top.n} ${Math.round(top.v)}. 압도적 한 방으로 글로벌 대상을 거머쥐었어.`};
+      sub:`<b>${top.n} ${grade(top.v)}등급.</b> 압도적 한 방으로 글로벌 대상을 거머쥐었어.`};
     // S — 대상 1위 + 올라운더
     if(champ && allround) return {emoji:"🏆",name:"월드 정상 올라운더",tier:"S",
       sub:`고르게 최상급인 육각형으로 글로벌 대상까지! 오래 사랑받을 대형 스타.`};
     // S — 원톱 실력으로 상위 입상
     if(onetop && podium) return {emoji:"👑",name:onetopTitles[top.k],tier:"S",
-      sub:`${top.n} ${Math.round(top.v)}. 확실한 한 방으로 세계 정상권에 섰어.`};
+      sub:`<b>${top.n} ${grade(top.v)}등급.</b> 확실한 한 방으로 세계 정상권에 섰어.`};
+    // S — 무대 4종 특화로 상위 입상
+    if(stageStar && podium) return {emoji:"🎆",name:"무대를 장악한 퍼포머",tier:"S",
+      sub:`보컬·댄스·비주얼·끼 4각이 압도적. 무대 위 카리스마로 세계를 홀렸어.`};
     // S — 완성형 올라운더
     if(allround) return {emoji:"🌈",name:"만능 올라운더 월드스타",tier:"S",
       sub:`모난 데 없이 두루 잘하는 육각형. 오래 사랑받을 대형 스타야.`};
-    // A — 대상 1위지만 스탯은 평범 (화제성·팬덤으로 대관식) ← champ 하한
+    // A — 무대형 (입상은 못했지만 무대는 최강)
+    if(stageStar) return {emoji:"🎭",name:"무대형 퍼포먼스 스타",tier:"A",
+      sub:`무대 위에선 최강. 예능·연기까지 갖추면 육각형도 노려볼만해.`};
+    // A — 대상 1위지만 스탯은 평범 (화제성·팬덤으로 대관식)
     if(champ) return {emoji:"🎉",name:"이변의 대관식",tier:"A",
       sub:`압도적 실력은 아니어도 화제성과 팬덤으로 글로벌 대상을 차지했어. 이것도 스타의 자질이야.`};
     // A — 준수 + 상위 입상
@@ -1075,6 +1112,7 @@ const Game = {
   },
 
   finish(reachedWorld, finalRank){
+    this.clearSave();   // 게임 종료 — 이어하기 삭제
     const s=this.st;
     const statTotal=STATS.reduce((a,st)=>a+s[st.k],0);
     s.fans+=Math.round(statTotal*35 + s.mental*8);
@@ -1085,9 +1123,9 @@ const Game = {
     this.lastResult={name:s.idol.name,grp:s.idol.grp,ending:end.name,emoji:end.emoji,
       tier:end.tier,fans:s.fans,reachedWorld,statVals,overall,finalRank:finalRank||null,
       spec:s.idol.spec, specName:spStat.n, specIco:spStat.ico, specColor:spStat.c, img:s.idol.img||"",
-      stage:reachedWorld?(finalRank?`글로벌 대상 ${finalRank}위`:"WORLD TOUR · WEEK 30"):"DOMESTIC 탈락"};
+      stage:reachedWorld?(finalRank?`글로벌 대상 ${finalRank}위`:"WORLD TOUR · WEEK 52"):"DOMESTIC 탈락"};
     document.getElementById("endStage").textContent=
-      reachedWorld?(finalRank?`글로벌 대상 ${finalRank}위 · WEEK 30 종료`:"WORLD TOUR · WEEK 30 종료"):"DOMESTIC 탈락 · 육성 종료";
+      reachedWorld?(finalRank?`글로벌 대상 ${finalRank}위 · WEEK 52 종료`:"WORLD TOUR · WEEK 52 종료"):"DOMESTIC 탈락 · 육성 종료";
     document.getElementById("endIdolBox").style.display="";
     const eav=document.getElementById("endAvatar");
     if(s.idol.img){ eav.src=s.idol.img; eav.style.display=""; } else { eav.style.display="none"; }
@@ -1108,6 +1146,7 @@ const Game = {
     drawRadar(document.getElementById("radar"), statVals, {dark:false});
     this.renderBoard(null);
     show("s-end");
+    this.prepCard();   // 카드 미리 생성 (저장 버튼 제스처 소진 방지)
   },
 
   // ===== 결과 카드 이미지 =====
@@ -1168,8 +1207,39 @@ const Game = {
     x.fillText("🐥 최애돌에서 내 최애 키우기", W/2, 1328);
     return cv;
   },
-  async shareCard(){
-    if(!this.lastResult){return;}
+  // 결과화면 진입 시 카드 이미지를 미리 만들어 캐시 (저장 버튼의 제스처 소진 방지)
+  prepCard(){
+    const r=this.lastResult; if(!r) return;
+    r.cardFile=null;
+    this.makeCard().then(cv=>{
+      cv.toBlob(blob=>{
+        if(!blob || this.lastResult!==r) return;
+        r.cardBlob=blob;
+        r.cardFile=new File([blob],`idol-tycoon-${r.name}.png`,{type:"image/png"});
+      },"image/png");
+    }).catch(()=>{});
+  },
+  downloadCard(file){
+    const a=document.createElement("a");
+    a.href=URL.createObjectURL(file); a.download=file.name; a.click();
+    setTimeout(()=>URL.revokeObjectURL(a.href),4000);
+    toast("이미지를 저장했어! 📸");
+  },
+  // 저장·공유: 미리 만든 파일을 await 없이 즉시 사용 → 사용자 제스처 유지(안드 크롬 대응)
+  shareCard(){
+    const r=this.lastResult; if(!r) return;
+    const file=r.cardFile;
+    if(!file){ this.shareCardSlow(); return; }   // 아직 생성 전이면 폴백
+    const shareData={files:[file],title:"아이돌 육성 타이쿤",
+      text:`${r.name} → ${r.ending} (팬 ${fmt(r.fans)}명)`};
+    if(navigator.canShare && navigator.canShare({files:[file]})){
+      navigator.share(shareData).catch(e=>{ if(e.name!=="AbortError") this.downloadCard(file); });
+      return;
+    }
+    this.downloadCard(file);
+  },
+  // 폴백(카드 미완성 시): 기존 비동기 경로 — 데스크탑 등에서 동작
+  async shareCardSlow(){
     const cv=await this.makeCard();
     cv.toBlob(async (blob)=>{
       const file=new File([blob],`idol-tycoon-${this.lastResult.name}.png`,{type:"image/png"});
@@ -1178,10 +1248,7 @@ const Game = {
       if(navigator.canShare && navigator.canShare({files:[file]})){
         try{ await navigator.share(shareData); return; }catch(e){ if(e.name==="AbortError") return; }
       }
-      const a=document.createElement("a");
-      a.href=URL.createObjectURL(blob); a.download=file.name; a.click();
-      setTimeout(()=>URL.revokeObjectURL(a.href),4000);
-      toast("이미지를 저장했어! 📸");
+      this.downloadCard(file);
     },"image/png");
   },
 
@@ -1229,7 +1296,9 @@ const Game = {
   reset(){
     ["shareBtn","nameInput","saveBtn"].forEach(id=>document.getElementById(id).style.display="");
     this.st=null;this.selId=null;this.lastResult=null; show("s-title");
+    this.refreshTitle();
   },
+  refreshTitle(){ const b=document.getElementById("continueBtn"); if(b) b.style.display=this.hasSave()?"":"none"; },
 };
 
 // ===== 레이더 차트 =====
@@ -1253,9 +1322,10 @@ function drawRadarCtx(x, cx, cy, R, vals, opts){
   // 축
   for(let i=0;i<N;i++){ x.beginPath(); x.moveTo(cx,cy);
     x.lineTo(cx+Math.cos(ang(i))*R, cy+Math.sin(ang(i))*R); x.strokeStyle=grid; x.stroke(); }
-  // 데이터 폴리곤
+  // 데이터 폴리곤 (스탯은 누적 P 0~800 스케일)
+  const MAXV=800;
   x.beginPath();
-  for(let i=0;i<N;i++){ const r=R*Math.min(100,vals[i].v)/100;
+  for(let i=0;i<N;i++){ const r=R*Math.min(MAXV,vals[i].v)/MAXV;
     const px=cx+Math.cos(ang(i))*r, py=cy+Math.sin(ang(i))*r; i?x.lineTo(px,py):x.moveTo(px,py); }
   x.closePath();
   const fill=x.createLinearGradient(cx-R,cy-R,cx+R,cy+R);
@@ -1266,7 +1336,7 @@ function drawRadarCtx(x, cx, cy, R, vals, opts){
   const lf=big?"700 26px":"700 12px";
   const gf=big?"900 30px":"900 14px";
   for(let i=0;i<N;i++){
-    const r=R*Math.min(100,vals[i].v)/100;
+    const r=R*Math.min(MAXV,vals[i].v)/MAXV;
     const px=cx+Math.cos(ang(i))*r, py=cy+Math.sin(ang(i))*r;
     x.beginPath(); x.arc(px,py,big?6:4,0,7); x.fillStyle=vals[i].c; x.fill();
     const lr=R+(big?52:26), lx=cx+Math.cos(ang(i))*lr, ly=cy+Math.sin(ang(i))*lr;
@@ -1274,7 +1344,7 @@ function drawRadarCtx(x, cx, cy, R, vals, opts){
     x.fillStyle=dark?"#d9d2f0":"#333"; x.font=lf+" 'Apple SD Gothic Neo',sans-serif";
     x.fillText(vals[i].n, lx, ly-(big?6:3));
     x.fillStyle=vals[i].c; x.font=gf+" 'Apple SD Gothic Neo',sans-serif";
-    x.fillText(vals[i].g+" · "+vals[i].v, lx, ly+(big?26:12));
+    x.fillText(vals[i].g+" 등급", lx, ly+(big?26:12));
   }
   x.textAlign="left";
 }
@@ -1299,4 +1369,6 @@ function esc(s){return (s||"").replace(/[<>&]/g,c=>({"<":"&lt;",">":"&gt;","&":"
 let toastTimer;
 function toast(msg){const t=document.getElementById("toast");t.textContent=msg;t.className="toast on";
   clearTimeout(toastTimer);toastTimer=setTimeout(()=>t.className="toast",1900);}
+// 타이틀 진입 시 이어하기 버튼 노출
+Game.refreshTitle();
 </script>
