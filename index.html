@@ -32,6 +32,31 @@
   .btn.ghost{background:var(--panel2);box-shadow:none;color:var(--txt);border:1px solid var(--line)}
   .btn:disabled{opacity:.4}
 
+  /* 플레이 메뉴 버튼 + 시트 모달 */
+  .menu-btn{flex:none;width:38px;height:38px;border-radius:12px;border:1px solid var(--line);
+    background:var(--panel2);color:var(--txt);font-size:18px;line-height:1;cursor:pointer;
+    display:flex;align-items:center;justify-content:center;transition:transform .08s}
+  .menu-btn:active{transform:scale(.92)}
+  .sheet{position:absolute;inset:0;background:rgba(40,20,28,.42);backdrop-filter:blur(2px);
+    display:none;flex-direction:column;justify-content:flex-end;z-index:35}
+  .sheet.on{display:flex;animation:sheetFade .18s ease}
+  @keyframes sheetFade{from{opacity:0}to{opacity:1}}
+  .sheet-card{background:var(--bg);border-radius:22px 22px 0 0;padding:20px 18px calc(20px + env(safe-area-inset-bottom));
+    box-shadow:0 -10px 30px rgba(0,0,0,.18);animation:sheetUp .22s cubic-bezier(.2,.9,.3,1)}
+  @keyframes sheetUp{from{transform:translateY(100%)}to{transform:translateY(0)}}
+  .sheet-title{font-weight:800;font-size:17px;text-align:center;margin-bottom:4px}
+  .sheet-sub{color:var(--sub);font-size:13px;text-align:center;line-height:1.5;margin-bottom:16px}
+  .sheet-btn{width:100%;border:none;border-radius:14px;padding:15px 16px;font-size:16px;font-weight:700;
+    cursor:pointer;margin-top:9px;transition:transform .08s;font-family:inherit}
+  .sheet-btn:active{transform:scale(.97)}
+  .sheet-btn.primary{background:linear-gradient(135deg,var(--accent),var(--accent2));color:#fff}
+  .sheet-btn.plain{background:var(--panel2);color:var(--txt);border:1px solid var(--line)}
+  .sheet-btn.danger{background:var(--panel2);color:var(--bad);border:1px solid var(--line)}
+  .sheet-lang{display:flex;gap:8px;margin-top:9px}
+  .sheet-lang button{flex:1;border-radius:12px;padding:11px;font-size:14px;font-weight:700;cursor:pointer;
+    border:1px solid var(--line);background:var(--panel2);color:var(--sub);font-family:inherit}
+  .sheet-lang button.sel{background:linear-gradient(135deg,var(--accent),var(--accent2));color:#fff;border-color:transparent}
+
   /* SELECT */
   .segtab{display:flex;gap:8px;margin-bottom:12px}
   .seg{flex:1;appearance:none;border:1px solid var(--line);border-radius:12px;padding:11px 8px;
@@ -330,6 +355,11 @@
 <div id="app">
   <div class="toast" id="toast"></div>
 
+  <!-- 시트 모달 (메뉴 / 나가기 확인) -->
+  <div class="sheet" id="sheet" onclick="if(event.target===this)Game.closeSheet()">
+    <div class="sheet-card" id="sheetCard"></div>
+  </div>
+
   <!-- TITLE -->
   <section class="screen on" id="s-title">
     <select id="langSel" class="langsel" onchange="Game.changeLang(this.value)" aria-label="language"></select>
@@ -384,6 +414,7 @@
         <span class="chip" id="pChip">—</span>
       </div>
       <div class="fans"><b id="pFans">0</b><span>FANS</span></div>
+      <button class="menu-btn" id="menuBtn" onclick="Game.openMenu()" aria-label="menu">☰</button>
     </div>
 
     <div class="actbar">
@@ -773,7 +804,7 @@ const Game = {
     this.save();
     this.cutscene({act:t("cs_act1"), emoji:"🎬", title:t("cs1_title"), sub:t("cs1_sub"),
       talk:t("cs1_talk",{name:idol.name})},
-      ()=>{ show("s-play"); this.startWeek(); toast(t("start_toast",{name:idol.name})); });
+      ()=>{ show("s-play"); this.startWeek(); this.armBackGuard(); toast(t("start_toast",{name:idol.name})); });
   },
   actName(w){ return w<=12?t("act_debut"):w<=36?t("act_domestic"):t("act_world"); },
 
@@ -989,7 +1020,7 @@ const Game = {
     if(!raw){ toast(t("toast_no_save")); return; }
     try{ this.st=JSON.parse(raw); }catch(e){ toast(t("toast_save_broken")); this.clearSave(); return; }
     if(!this.st.log) this.st.log=[];
-    show("s-play"); this.startWeek();
+    show("s-play"); this.startWeek(); this.armBackGuard();
     toast(t("toast_resume",{w:this.st.week}));
   },
 
@@ -1467,6 +1498,37 @@ const Game = {
   },
   refreshTitle(){ const b=document.getElementById("continueBtn"); if(b) b.style.display=this.hasSave()?"":"none"; },
 
+  // ===== 플레이 중 메뉴 / 나가기 확인 (시트 모달) =====
+  inPlay(){ return document.getElementById("s-play").classList.contains("on") && !!this.st; },
+  openSheet(html){ const s=document.getElementById("sheet");
+    document.getElementById("sheetCard").innerHTML=html; s.classList.add("on"); },
+  closeSheet(){ document.getElementById("sheet").classList.remove("on"); },
+  openMenu(){
+    const langs=(typeof langList==="function"?langList():[{code:"ko",name:"한국어"},{code:"en",name:"EN"}]);
+    const langBtns=langs.map(l=>`<button class="${l.code===window.LANG?"sel":""}" onclick="Game.changeLang('${l.code}');Game.openMenu()">${l.name}</button>`).join("");
+    this.openSheet(`
+      <div class="sheet-title">${t("menu_title")}</div>
+      <div class="sheet-sub">${t("menu_settings")} · ${t("menu_lang")}</div>
+      <div class="sheet-lang">${langBtns}</div>
+      <button class="sheet-btn primary" onclick="Game.saveFromMenu()">${t("menu_save")}</button>
+      <button class="sheet-btn danger" onclick="Game.confirmExit()">${t("menu_quit")}</button>
+      <button class="sheet-btn plain" onclick="Game.closeSheet()">${t("exit_cancel")}</button>`);
+  },
+  saveFromMenu(){ this.save(); this.closeSheet(); toast(t("menu_saved")); },
+  // 3지선다: 저장하고 나가기 / 그냥 끄기 / 취소 — 뒤로가기·끝내기 공용
+  confirmExit(){
+    this.openSheet(`
+      <div class="sheet-title">${t("exit_title")}</div>
+      <div class="sheet-sub">${t("exit_sub")}</div>
+      <button class="sheet-btn primary" onclick="Game.exitSave()">${t("exit_save")}</button>
+      <button class="sheet-btn danger" onclick="Game.exitQuit()">${t("exit_quit")}</button>
+      <button class="sheet-btn plain" onclick="Game.closeSheet()">${t("exit_cancel")}</button>`);
+  },
+  exitSave(){ this.save(); this.closeSheet(); this.reset(); toast(t("menu_saved")); },
+  exitQuit(){ this.clearSave(); this.closeSheet(); this.reset(); },
+  // 뒤로가기 가드: 플레이 진입 시 history state 하나 쌓아 뒤로가기를 popstate로 가로챔
+  armBackGuard(){ try{ history.pushState({play:1},""); }catch(e){} },
+
   // ===== 프레스티지(육각형슈퍼스타) 배출 로깅 =====
   // localStorage는 로컬이라 전역집계 불가 → 출시 후 실제 배출률 관찰용.
   // PRESTIGE_LOG_URL 설정 시에만 원격 전송(fire-and-forget). 미설정이면 로컬 카운트만.
@@ -1588,6 +1650,14 @@ Game.changeLang=function(l){ setLang(l); applyI18n(); initLangSwitch();
 initLangSwitch();
 applyI18n();
 Game.refreshTitle();
+// 뒤로가기 가드: 플레이 중이면 페이지를 떠나지 않고 나가기 확인 시트 노출
+window.addEventListener("popstate", ()=>{
+  if(Game.inPlay()){
+    Game.armBackGuard();   // 다시 state 쌓아 페이지에 머무름
+    if(document.getElementById("sheet").classList.contains("on")) Game.closeSheet();
+    else Game.confirmExit();
+  }
+});
 // 공유 링크(?r=...)로 열렸으면 그 결과를 바로 재현
 (function(){
   const enc=new URLSearchParams(location.search).get("r");
