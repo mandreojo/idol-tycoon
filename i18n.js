@@ -57,17 +57,17 @@ window.I18N = {
     // 연습실 패널
     pr_next_dday:"다음 관문 · D-{d}주",
     pr_next_now:"다음 관문 · 이번 주!",
-    ms_debut:"🎤 데뷔 심사", ms_music1:"📺 음악방송 1위 도전", ms_music2:"🎬 음방 2연속 1위",
-    ms_award:"🏆 국내 연말 가요대상", ms_global_show:"🌍 글로벌 뮤직쇼", ms_global_award:"👑 글로벌 대상",
+    ms_debut:"🎤 데뷔 심사", ms_music1:"📺 음악방송 1위 도전", ms_music2:"☀️ 여름 뮤직 페스티벌",
+    ms_award:"🛫 월드 진출 쇼케이스", ms_global_show:"🌍 글로벌 뮤직쇼", ms_global_award:"👑 연말 글로벌 대상",
     // 컷씬
     cs_act1:"ACT 1", cs_act2:"ACT 2", cs_act3:"ACT 3",
     cs1_title:"데뷔를 향해", cs1_sub:"ROAD TO DEBUT",
     cs1_talk:"{name}, 데뷔 준비 시작! 52주 동안 키워서 월드스타로 만들어보자 🔥",
     start_toast:"{name} 육성 시작!",
     cs2_title:"국내 시장 진출", cs2_sub:"DOMESTIC MARKET",
-    cs2_talk:"데뷔 성공! 🎉 이제 국내 라이벌들과 진짜 승부야. 음악방송·시상식 1위 노려보자!",
+    cs2_talk:"데뷔 성공! 🎉 이제 국내 라이벌들과 진짜 승부야. 음악방송·대형 무대 1위 노려보자!",
     cs3_title:"월드 무대", cs3_sub:"ROAD TO THE WORLD",
-    cs3_talk:"국내 정상 찍었어! 🏆 이제 전 세계가 무대야. 마지막 구간, 글로벌 대상까지 가보자!",
+    cs3_talk:"월드 진출 성공! 🌍 이제 전 세계가 무대야. 마지막 구간, 연말 글로벌 대상까지 가보자!",
     // 데뷔 심사
     debut_pass_title:"🎉 데뷔 성공!", debut_fail_title:"😬 언더독 데뷔",
     debut_pass_head:"🎊 데뷔 성공!", debut_fail_head:"😅 언더독 데뷔",
@@ -77,16 +77,16 @@ window.I18N = {
     debut_body:"데뷔 팬 <b>+{bonus}</b><br><br>이제 <b>국내 시장</b>에서 라이벌들과 경쟁이 시작된다.",
     debut_next:"진행하기 →",
     // 관문 결과
-    cp_t_20:"첫 음악방송 1위 도전", cp_t_28:"음악방송 2연속 1위 도전", cp_t_36:"국내 연말 가요대상",
-    cp_t_44:"글로벌 뮤직쇼 1위 도전", cp_t_52:"글로벌 뮤직 어워드 · 대상",
+    cp_t_20:"첫 음악방송 1위 도전", cp_t_28:"여름 뮤직 페스티벌 헤드라이너", cp_t_36:"월드 진출 쇼케이스",
+    cp_t_44:"글로벌 뮤직쇼 1위 도전", cp_t_52:"연말 글로벌 뮤직 어워드 · 대상",
     cp_stage_win_head:"🏆 음악방송 1위!", cp_stage_win_sub:"트로피 들고 앵콜! 팬덤이 폭발했어.",
     cp_stage_top_head:"{rank}위 · 상위권", cp_stage_top_sub:"1위는 놓쳤지만 존재감은 확실히 남겼어.",
     cp_stage_out_head:"{rank}위 · 순위권 밖", cp_stage_out_sub:"이번 컴백은 묻혔어… 다음을 노리자.",
-    cp_gate_win_head:"🏆 대상 수상!",
-    cp_gate_win_sub:"국내 정상을 찍었어! 팬 <b>+{b}</b><br>이제 <b>월드 무대</b>로! 보너스 라운드.",
+    cp_gate_win_head:"🛫 월드 진출 확정!",
+    cp_gate_win_sub:"국내 정상의 실력을 증명했어! 팬 <b>+{b}</b><br>이제 <b>월드 무대</b>로! 보너스 라운드.",
     cp_gate_win_btn:"Road to World →",
-    cp_gate_lose_head:"{rank}위 · 대상 불발",
-    cp_gate_lose_sub:"국내 대상 <b>1위</b>만 월드 무대에 설 수 있어. 정상의 벽을 넘지 못했어…",
+    cp_gate_lose_head:"{rank}위 · 월드 진출 불발",
+    cp_gate_lose_sub:"이 무대 <b>1위</b>만 월드 무대에 설 수 있어. 정상의 벽을 넘지 못했어…",
     cp_final_win_head:"👑 글로벌 대상 수상!", cp_final_lose_head:"{rank}위",
     cp_final_win_sub:"세계가 인정했어. 정점이야.", cp_final_lose_sub:"월드 무대의 여정을 마쳤어.",
     cp_final_bonus:"<br>대상 팬 <b>+{b}</b>",
@@ -116,8 +116,8 @@ window.I18N = {
     start_log:"<b>{name}</b> 데뷔 프로젝트 시작 — 함께 월드스타를 향해!",
     // 엔딩 종류
     e_disband_n:"팀 해체", e_disband_s:"국내의 벽을 넘지 못하고 해체됐어… 다음 생엔 꼭.",
-    e_stagelocal_n:"무대형 지역 스타", e_stagelocal_s:"무대 위에선 빛났지만 국내 대상의 벽은 높았어. 무대장악력은 진짜였어.",
-    e_local_n:"{stat} 지역 스타", e_local_s:"국내 대상 1위는 놓쳤지만 <b>{stat}</b> 하나로 단단한 마니아 팬층을 남겼어.",
+    e_stagelocal_n:"무대형 지역 스타", e_stagelocal_s:"무대 위에선 빛났지만 월드 진출의 벽은 높았어. 무대장악력은 진짜였어.",
+    e_local_n:"{stat} 지역 스타", e_local_s:"월드 진출은 놓쳤지만 <b>{stat}</b> 하나로 단단한 마니아 팬층을 남겼어.",
     e_ss_n:"글로벌 육각형 슈퍼스타",
     e_ss_s:"약점이 없어. 6가지 재능 모두 정상급인 완성형 월드스타.{champ}",
     e_ss_champ:" 글로벌 대상까지 석권한 역대급이야.", e_ss_nochamp:" 역대급이야.",
@@ -146,7 +146,7 @@ window.I18N = {
     d_bigstar_n:"믿고 보는 대형 스타", d_bigstar_h:"빈틈없이 두루 성장시켜 입상",
     d_stageA_n:"무대형 스타", d_stageA_h:"무대는 최강이지만 연기·작곡은 아직",
     d_longrun_n:"롱런형 아이돌", d_longrun_h:"한 방은 없어도 꾸준함으로 월드까지",
-    d_local_n:"지역 스타", d_local_h:"국내 대상 1위의 벽을 넘지 못하고",
+    d_local_n:"지역 스타", d_local_h:"월드 진출의 벽을 넘지 못하고",
     d_disband_n:"팀 해체", d_disband_h:"바닥에서 끝나버린 비운의 결말",
     // 명예의 전당
     hall_title:"🏆 명예의 전당", hall_sub:"지금까지 배출된 최고의 스타들", hall_top:"TOP 랭킹",
@@ -169,26 +169,26 @@ window.I18N = {
     cardsave_close:"닫기",
     // 이벤트 (13종)
     ev_talent_title:"예능 대박 각?", ev_talent_text:"인기 예능 고정 자리가 걸린 파일럿. 잘 살리면 화제성 폭발, 삐끗하면 편집 굴욕.",
-    ev_talent_c1:"끼 발산하며 올인", ev_talent_w_l:"예능 캐 각인!", ev_talent_w_d:"끼 <b>+28</b> · 팬 <b>대폭↑</b> · 컨디션 <b>-10</b>",
-    ev_talent_lo_l:"통편집…", ev_talent_lo_d:"멘탈 <b>-8</b> · 컨디션 <b>-8</b> · 팬 소폭", ev_talent_c2:"연습에 집중 (멘탈 +7)",
+    ev_talent_c1:"끼 발산하며 올인", ev_talent_w_l:"예능 캐 각인!", ev_talent_w_d:"끼 <b>+32</b> · 팬 <b>대폭↑↑</b> · 컨디션 <b>-10</b>",
+    ev_talent_lo_l:"통편집·굴욕짤", ev_talent_lo_d:"멘탈 <b>-15</b> · 컨디션 <b>-14</b> · 팬 <b>↓↓</b>", ev_talent_c2:"연습에 집중 (멘탈 +7)",
     ev_drama_title:"드라마 조연 캐스팅", ev_drama_text:"연기돌로 갈 기회. 근데 발연기 논란 나면 이미지 타격이 커.",
-    ev_drama_c1:"연기 도전", ev_drama_w_l:"인생 조연!", ev_drama_w_d:"연기 <b>+34</b> · 팬 <b>↑↑</b> · 컨디션 <b>-12</b>",
-    ev_drama_lo_l:"발연기 논란", ev_drama_lo_d:"연기 <b>+10</b> · 멘탈 <b>-7</b> · 팬 <b>↓</b>", ev_drama_c2:"음악에 집중 (보컬 +14)",
+    ev_drama_c1:"연기 도전", ev_drama_w_l:"인생 조연!", ev_drama_w_d:"연기 <b>+40</b> · 팬 <b>↑↑↑</b> · 컨디션 <b>-12</b>",
+    ev_drama_lo_l:"발연기 논란", ev_drama_lo_d:"연기 <b>+6</b> · 멘탈 <b>-14</b> · 팬 <b>↓↓</b>", ev_drama_c2:"음악에 집중 (보컬 +14)",
     ev_live_title:"편집 없는 生라이브", ev_live_text:"실시간 소통 라이브 제안. 날것 그대로라 리스크가 커.",
-    ev_live_c1:"생방송 강행", ev_live_w_l:"라이브 레전드!", ev_live_w_d:"끼 <b>+24</b> · 팬 <b>대폭↑</b>",
-    ev_live_lo_l:"방송사고…", ev_live_lo_d:"멘탈 <b>-9</b> · 컨디션 <b>-6</b>", ev_live_c2:"녹화로 안전하게 (끼 +12)",
+    ev_live_c1:"생방송 강행", ev_live_w_l:"라이브 레전드!", ev_live_w_d:"끼 <b>+28</b> · 팬 <b>대폭↑↑</b> · 컨디션 <b>-6</b>",
+    ev_live_lo_l:"방송사고·박제", ev_live_lo_d:"멘탈 <b>-16</b> · 컨디션 <b>-13</b> · 팬 <b>↓</b>", ev_live_c2:"녹화로 안전하게 (끼 +12)",
     ev_chal_title:"챌린지 열풍", ev_chal_text:"네 안무 클립이 SNS에서 도는 중. 챌린지 유행을 노려볼까?",
-    ev_chal_c1:"댄스 챌린지 점화", ev_chal_w_l:"떡상 챌린지!", ev_chal_w_d:"댄스 <b>+30</b> · 팬 <b>폭발↑</b>",
-    ev_chal_lo_l:"묻힘…", ev_chal_lo_d:"댄스 <b>+9</b> · 팬 소폭", ev_chal_c2:"완성도 더 높이기 (댄스 +14)",
+    ev_chal_c1:"댄스 챌린지 점화", ev_chal_w_l:"떡상 챌린지!", ev_chal_w_d:"댄스 <b>+36</b> · 팬 <b>폭발↑↑</b>",
+    ev_chal_lo_l:"조롱 밈으로 소비", ev_chal_lo_d:"댄스 <b>+4</b> · 멘탈 <b>-10</b> · 팬 <b>↓</b>", ev_chal_c2:"완성도 더 높이기 (댄스 +14)",
     ev_cf_title:"명품 브랜드 CF", ev_cf_text:"글로벌 브랜드 광고 제안. 비주얼 승부라 부담도 커.",
-    ev_cf_c1:"메인 모델 도전", ev_cf_w_l:"브랜드 뮤즈!", ev_cf_w_d:"비주얼 <b>+30</b> · 팬 <b>↑↑</b>",
-    ev_cf_lo_l:"이미지 안 맞음", ev_cf_lo_d:"비주얼 <b>+9</b> · 멘탈 <b>-5</b>", ev_cf_c2:"내실부터 다지기 (비주얼 +12)",
+    ev_cf_c1:"메인 모델 도전", ev_cf_w_l:"브랜드 뮤즈!", ev_cf_w_d:"비주얼 <b>+36</b> · 팬 <b>↑↑↑</b>",
+    ev_cf_lo_l:"혹평·계약 무산", ev_cf_lo_d:"비주얼 <b>+5</b> · 멘탈 <b>-12</b> · 팬 <b>↓</b>", ev_cf_c2:"내실부터 다지기 (비주얼 +12)",
     ev_surv_title:"서바이벌 프로 출연", ev_surv_text:"경연 프로에서 실력 검증 무대. 이기면 급상승, 지면 굴욕.",
-    ev_surv_c1:"경연 참가", ev_surv_w_l:"올킬 무대!", ev_surv_w_d:"보컬·댄스 <b>+20</b> · 팬 <b>대폭↑</b>",
-    ev_surv_lo_l:"탈락…", ev_surv_lo_d:"멘탈 <b>-10</b> · 컨디션 <b>-8</b>", ev_surv_c2:"기권하고 컨디션 관리 (컨디션 +12)",
+    ev_surv_c1:"경연 참가", ev_surv_w_l:"올킬 무대!", ev_surv_w_d:"보컬·댄스 <b>+24</b> · 팬 <b>대폭↑↑</b> · 컨디션 <b>-10</b>",
+    ev_surv_lo_l:"광탈·악편 논란", ev_surv_lo_d:"멘탈 <b>-18</b> · 컨디션 <b>-14</b> · 팬 <b>↓↓</b>", ev_surv_c2:"기권하고 컨디션 관리 (컨디션 +12)",
     ev_scandal_title:"열애설 보도", ev_scandal_text:"근거 약한 열애설이 터졌어. 대응이 관건이야.",
-    ev_scandal_c1:"쿨하게 정면 대응", ev_scandal_w_l:"대인배 인정!", ev_scandal_w_d:"멘탈 <b>+8</b> · 팬 <b>↑</b>",
-    ev_scandal_lo_l:"논란 확산", ev_scandal_lo_d:"멘탈 <b>-9</b> · 팬 <b>↓</b>", ev_scandal_c2:"소속사에 맡기고 잠수 (컨디션 +10)",
+    ev_scandal_c1:"쿨하게 정면 대응", ev_scandal_w_l:"대인배 인정!", ev_scandal_w_d:"멘탈 <b>+10</b> · 팬 <b>↑↑</b>",
+    ev_scandal_lo_l:"루머 눈덩이·탈덕", ev_scandal_lo_d:"멘탈 <b>-16</b> · 팬 <b>↓↓↓</b> · 컨디션 <b>-6</b>", ev_scandal_c2:"소속사에 맡기고 잠수 (컨디션 +10)",
     ev_support_title:"열성팬의 서포트", ev_support_text:"팬들이 자발적으로 지하철·버스 광고를 걸어줬어!",
     ev_support_c1:"고맙게 화답 (팬 대폭 ↑)",
     ev_selfwrite_title:"자작곡 떡밥", ev_selfwrite_text:"작업하던 데모 반응이 좋아. 자컨·자작곡 아티스트로?",
@@ -250,16 +250,16 @@ window.I18N = {
     tap_continue:"Tap to continue",
     pr_next_dday:"Next event · D-{d}w",
     pr_next_now:"Next event · this week!",
-    ms_debut:"🎤 Debut Eval", ms_music1:"📺 1st Music Show Win", ms_music2:"🎬 2nd Win in a Row",
-    ms_award:"🏆 Year-End Awards", ms_global_show:"🌍 Global Music Show", ms_global_award:"👑 Global Grand Prize",
+    ms_debut:"🎤 Debut Eval", ms_music1:"📺 1st Music Show Win", ms_music2:"☀️ Summer Music Festival",
+    ms_award:"🛫 World Debut Showcase", ms_global_show:"🌍 Global Music Show", ms_global_award:"👑 Year-End Global Grand Prize",
     cs_act1:"ACT 1", cs_act2:"ACT 2", cs_act3:"ACT 3",
     cs1_title:"Toward Debut", cs1_sub:"ROAD TO DEBUT",
     cs1_talk:"{name}, debut prep starts now! 52 weeks to become a world star 🔥",
     start_toast:"Raising {name}!",
     cs2_title:"Domestic Market", cs2_sub:"DOMESTIC MARKET",
-    cs2_talk:"Debut success! 🎉 Now it's a real fight with domestic rivals. Aim for #1 on music shows & awards!",
+    cs2_talk:"Debut success! 🎉 Now it's a real fight with domestic rivals. Aim for #1 on music shows & big stages!",
     cs3_title:"World Stage", cs3_sub:"ROAD TO THE WORLD",
-    cs3_talk:"Topped the country! 🏆 The whole world is your stage now. Final stretch — go for the Global Grand Prize!",
+    cs3_talk:"You made it to the world! 🌍 The whole world is your stage now. Final stretch — go for the Year-End Global Grand Prize!",
     debut_pass_title:"🎉 Debut Success!", debut_fail_title:"😬 Underdog Debut",
     debut_pass_head:"🎊 Debut Success!", debut_fail_head:"😅 Underdog Debut",
     debut_pass_log:"🎊 <b>Debut Success!</b> A dazzling debut",
@@ -267,16 +267,16 @@ window.I18N = {
     debut_pass_text:"Passed with flying colors! A dazzling debut.", debut_fail_text:"Barely debuted… a long way to go.",
     debut_body:"Debut fans <b>+{bonus}</b><br><br>Now the <b>domestic market</b> battle with rivals begins.",
     debut_next:"Continue →",
-    cp_t_20:"1st Music Show Win Challenge", cp_t_28:"2nd Music Show Win in a Row", cp_t_36:"Year-End Music Awards",
-    cp_t_44:"Global Music Show Win Challenge", cp_t_52:"Global Music Awards · Grand Prize",
+    cp_t_20:"1st Music Show Win Challenge", cp_t_28:"Summer Festival Headliner", cp_t_36:"World Debut Showcase",
+    cp_t_44:"Global Music Show Win Challenge", cp_t_52:"Year-End Global Music Awards · Grand Prize",
     cp_stage_win_head:"🏆 Music Show #1!", cp_stage_win_sub:"Trophy and encore! The fandom exploded.",
     cp_stage_top_head:"#{rank} · Top ranks", cp_stage_top_sub:"Missed #1 but left a real mark.",
     cp_stage_out_head:"#{rank} · Out of range", cp_stage_out_sub:"This comeback got buried… get 'em next time.",
-    cp_gate_win_head:"🏆 Grand Prize!",
-    cp_gate_win_sub:"Topped the nation! Fans <b>+{b}</b><br>On to the <b>world stage</b>! Bonus round.",
+    cp_gate_win_head:"🛫 World Debut Confirmed!",
+    cp_gate_win_sub:"Proved you're the nation's best! Fans <b>+{b}</b><br>On to the <b>world stage</b>! Bonus round.",
     cp_gate_win_btn:"Road to World →",
-    cp_gate_lose_head:"#{rank} · No Grand Prize",
-    cp_gate_lose_sub:"Only the <b>#1</b> Grand Prize winner reaches the world stage. Couldn't break through…",
+    cp_gate_lose_head:"#{rank} · No World Debut",
+    cp_gate_lose_sub:"Only the <b>#1</b> here reaches the world stage. Couldn't break through…",
     cp_final_win_head:"👑 Global Grand Prize!", cp_final_lose_head:"#{rank}",
     cp_final_win_sub:"The world agrees. This is the peak.", cp_final_lose_sub:"The world tour journey is complete.",
     cp_final_bonus:"<br>Award fans <b>+{b}</b>",
@@ -303,8 +303,8 @@ window.I18N = {
     home_btn:"Home", again_btn:"Play Again",
     start_log:"<b>{name}</b>'s debut project begins — to the world, together!",
     e_disband_n:"Group Disbanded", e_disband_s:"Couldn't break the domestic wall and disbanded… next time for sure.",
-    e_stagelocal_n:"Stage-Type Local Star", e_stagelocal_s:"Shone on stage, but the Grand Prize wall was high. That stage presence was real, though.",
-    e_local_n:"{stat} Local Star", e_local_s:"Missed the #1 Grand Prize, but built a solid core fandom on <b>{stat}</b> alone.",
+    e_stagelocal_n:"Stage-Type Local Star", e_stagelocal_s:"Shone on stage, but the wall to the world stage was high. That stage presence was real, though.",
+    e_local_n:"{stat} Local Star", e_local_s:"Missed the world debut, but built a solid core fandom on <b>{stat}</b> alone.",
     e_ss_n:"Global Hexagon Superstar",
     e_ss_s:"No weaknesses. A complete world star, top-tier in all 6 talents.{champ}",
     e_ss_champ:" Even swept the Global Grand Prize — an all-timer.", e_ss_nochamp:" An all-timer.",
@@ -331,7 +331,7 @@ window.I18N = {
     d_bigstar_n:"Reliable Big Star", d_bigstar_h:"Grow evenly with no gaps and place at awards",
     d_stageA_n:"Stage-Type Star", d_stageA_h:"Unbeatable on stage, but acting & composing lag",
     d_longrun_n:"Slow-and-Steady Idol", d_longrun_h:"No knockout, but consistency all the way to worlds",
-    d_local_n:"Local Star", d_local_h:"Couldn't break the #1 Grand Prize wall",
+    d_local_n:"Local Star", d_local_h:"Couldn't break through to the world stage",
     d_disband_n:"Group Disbanded", d_disband_h:"An unlucky ending that bottomed out",
     hall_title:"🏆 Hall of Fame", hall_sub:"The greatest stars produced so far", hall_top:"TOP Ranking",
     hall_empty:"No records yet. Be the first!",
@@ -350,26 +350,26 @@ window.I18N = {
     cardsave_sub:"If it won't save, open the <b>⋮ menu → Open in another browser</b> and try again",
     cardsave_close:"Close",
     ev_talent_title:"Variety Show Jackpot?", ev_talent_text:"A pilot with a regular spot on a hit variety show on the line. Nail it and buzz explodes; slip and you get edited out.",
-    ev_talent_c1:"Go all-in on charm", ev_talent_w_l:"Variety Star Born!", ev_talent_w_d:"Charm <b>+28</b> · Fans <b>way up↑</b> · Condition <b>-10</b>",
-    ev_talent_lo_l:"Edited out…", ev_talent_lo_d:"Mental <b>-8</b> · Condition <b>-8</b> · Fans slightly", ev_talent_c2:"Focus on practice (Mental +7)",
+    ev_talent_c1:"Go all-in on charm", ev_talent_w_l:"Variety Star Born!", ev_talent_w_d:"Charm <b>+32</b> · Fans <b>way up↑↑</b> · Condition <b>-10</b>",
+    ev_talent_lo_l:"Edited out, meme'd", ev_talent_lo_d:"Mental <b>-15</b> · Condition <b>-14</b> · Fans <b>↓↓</b>", ev_talent_c2:"Focus on practice (Mental +7)",
     ev_drama_title:"Drama Supporting Role", ev_drama_text:"A shot at becoming an acting-idol. But a bad-acting controversy would hurt the image a lot.",
-    ev_drama_c1:"Take on acting", ev_drama_w_l:"Career-Best Role!", ev_drama_w_d:"Acting <b>+34</b> · Fans <b>↑↑</b> · Condition <b>-12</b>",
-    ev_drama_lo_l:"Bad-acting buzz", ev_drama_lo_d:"Acting <b>+10</b> · Mental <b>-7</b> · Fans <b>↓</b>", ev_drama_c2:"Focus on music (Vocal +14)",
+    ev_drama_c1:"Take on acting", ev_drama_w_l:"Career-Best Role!", ev_drama_w_d:"Acting <b>+40</b> · Fans <b>↑↑↑</b> · Condition <b>-12</b>",
+    ev_drama_lo_l:"Bad-acting buzz", ev_drama_lo_d:"Acting <b>+6</b> · Mental <b>-14</b> · Fans <b>↓↓</b>", ev_drama_c2:"Focus on music (Vocal +14)",
     ev_live_title:"Unedited Live", ev_live_text:"A real-time interactive live is proposed. Raw and unfiltered, so the risk is high.",
-    ev_live_c1:"Go live anyway", ev_live_w_l:"Live Legend!", ev_live_w_d:"Charm <b>+24</b> · Fans <b>way up↑</b>",
-    ev_live_lo_l:"On-air mishap…", ev_live_lo_d:"Mental <b>-9</b> · Condition <b>-6</b>", ev_live_c2:"Play it safe, pre-record (Charm +12)",
+    ev_live_c1:"Go live anyway", ev_live_w_l:"Live Legend!", ev_live_w_d:"Charm <b>+28</b> · Fans <b>way up↑↑</b> · Condition <b>-6</b>",
+    ev_live_lo_l:"On-air mishap, archived", ev_live_lo_d:"Mental <b>-16</b> · Condition <b>-13</b> · Fans <b>↓</b>", ev_live_c2:"Play it safe, pre-record (Charm +12)",
     ev_chal_title:"Challenge Craze", ev_chal_text:"Your dance clip is going around on social. Ride the challenge trend?",
-    ev_chal_c1:"Ignite a dance challenge", ev_chal_w_l:"Viral Challenge!", ev_chal_w_d:"Dance <b>+30</b> · Fans <b>explode↑</b>",
-    ev_chal_lo_l:"Fizzled…", ev_chal_lo_d:"Dance <b>+9</b> · Fans slightly", ev_chal_c2:"Polish it more (Dance +14)",
+    ev_chal_c1:"Ignite a dance challenge", ev_chal_w_l:"Viral Challenge!", ev_chal_w_d:"Dance <b>+36</b> · Fans <b>explode↑↑</b>",
+    ev_chal_lo_l:"Turned into a mock meme", ev_chal_lo_d:"Dance <b>+4</b> · Mental <b>-10</b> · Fans <b>↓</b>", ev_chal_c2:"Polish it more (Dance +14)",
     ev_cf_title:"Luxury Brand CF", ev_cf_text:"A global brand ad offer. It's a visual game, so the pressure is on.",
-    ev_cf_c1:"Go for lead model", ev_cf_w_l:"Brand Muse!", ev_cf_w_d:"Visual <b>+30</b> · Fans <b>↑↑</b>",
-    ev_cf_lo_l:"Image mismatch", ev_cf_lo_d:"Visual <b>+9</b> · Mental <b>-5</b>", ev_cf_c2:"Build fundamentals first (Visual +12)",
+    ev_cf_c1:"Go for lead model", ev_cf_w_l:"Brand Muse!", ev_cf_w_d:"Visual <b>+36</b> · Fans <b>↑↑↑</b>",
+    ev_cf_lo_l:"Panned, deal fell through", ev_cf_lo_d:"Visual <b>+5</b> · Mental <b>-12</b> · Fans <b>↓</b>", ev_cf_c2:"Build fundamentals first (Visual +12)",
     ev_surv_title:"Survival Show", ev_surv_text:"A stage to prove your skills on a competition show. Win and you soar; lose and you're humbled.",
-    ev_surv_c1:"Enter the competition", ev_surv_w_l:"All-Kill Stage!", ev_surv_w_d:"Vocal·Dance <b>+20</b> · Fans <b>way up↑</b>",
-    ev_surv_lo_l:"Eliminated…", ev_surv_lo_d:"Mental <b>-10</b> · Condition <b>-8</b>", ev_surv_c2:"Withdraw, manage condition (Condition +12)",
+    ev_surv_c1:"Enter the competition", ev_surv_w_l:"All-Kill Stage!", ev_surv_w_d:"Vocal·Dance <b>+24</b> · Fans <b>way up↑↑</b> · Condition <b>-10</b>",
+    ev_surv_lo_l:"Knocked out, bad edit", ev_surv_lo_d:"Mental <b>-18</b> · Condition <b>-14</b> · Fans <b>↓↓</b>", ev_surv_c2:"Withdraw, manage condition (Condition +12)",
     ev_scandal_title:"Dating Rumor", ev_scandal_text:"A flimsy dating rumor broke out. Handling it is everything.",
-    ev_scandal_c1:"Address it coolly, head-on", ev_scandal_w_l:"Certified Class Act!", ev_scandal_w_d:"Mental <b>+8</b> · Fans <b>↑</b>",
-    ev_scandal_lo_l:"Controversy spreads", ev_scandal_lo_d:"Mental <b>-9</b> · Fans <b>↓</b>", ev_scandal_c2:"Let the agency handle it, lay low (Condition +10)",
+    ev_scandal_c1:"Address it coolly, head-on", ev_scandal_w_l:"Certified Class Act!", ev_scandal_w_d:"Mental <b>+10</b> · Fans <b>↑↑</b>",
+    ev_scandal_lo_l:"Rumor snowballs, fans leave", ev_scandal_lo_d:"Mental <b>-16</b> · Fans <b>↓↓↓</b> · Condition <b>-6</b>", ev_scandal_c2:"Let the agency handle it, lay low (Condition +10)",
     ev_support_title:"Devoted Fan Support", ev_support_text:"Fans put up subway & bus ads for you on their own!",
     ev_support_c1:"Thank them warmly (Fans way up ↑)",
     ev_selfwrite_title:"Self-Written Song Buzz", ev_selfwrite_text:"The demo you've been working on is getting good reactions. Go the self-producing route?",
@@ -388,18 +388,22 @@ window.I18N = {
 
 // ===== 엔진 =====
 (function(){
-  const SUPPORTED=["ko","en","ja","zh-cn","zh-tw","es"];
+  // 선언된 언어들 중 실제 언어팩(I18N)이 존재하는 것만 활성. 팩 추가하면 스위처에 자동 노출.
+  const DECLARED=["ko","en","ja","zh-cn","zh-tw","es"];
+  const has=l=>!!I18N[l];
+  const SUPPORTED=DECLARED.filter(has);
   function detect(){
-    try{ const s=localStorage.getItem("idol_lang"); if(s&&SUPPORTED.includes(s)) return s; }catch(e){}
+    try{ const s=localStorage.getItem("idol_lang"); if(s&&has(s)) return s; }catch(e){}
     const n=(navigator.language||"ko").toLowerCase();
-    if(n.startsWith("ko")) return "ko";
-    if(n.startsWith("ja")) return "ja";
-    if(n.startsWith("es")) return "es";
-    if(n.startsWith("zh")){ return (n.includes("tw")||n.includes("hk")||n.includes("hant"))?"zh-tw":"zh-cn"; }
-    return "en";
+    let want="en";
+    if(n.startsWith("ko")) want="ko";
+    else if(n.startsWith("ja")) want="ja";
+    else if(n.startsWith("es")) want="es";
+    else if(n.startsWith("zh")) want=(n.includes("tw")||n.includes("hk")||n.includes("hant"))?"zh-tw":"zh-cn";
+    return has(want)?want:"en";   // 미구현 언어면 한국어 아닌 영어로 폴백
   }
   window.LANG = detect();
-  window.setLang = function(l){ if(!SUPPORTED.includes(l)) return; window.LANG=l;
+  window.setLang = function(l){ if(!has(l)) return; window.LANG=l;
     try{ localStorage.setItem("idol_lang", l); }catch(e){} };
   window.langList = function(){ return SUPPORTED.map(l=>({code:l, name:(I18N[l]&&I18N[l].lang_name)||l})); };
   // t(key, params) — 폴백: 현재언어 → ko → key
