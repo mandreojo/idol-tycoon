@@ -130,6 +130,10 @@
   .ov.on{display:flex}
   .roll{font-size:52px;font-weight:900;letter-spacing:-2px;margin-bottom:4px}
   .roll.dc{color:var(--bad)} .roll.f{color:#ff9d5f} .roll.s{color:var(--good)} .roll.dg{color:var(--gold)}
+  .roll.pf{color:#ffcf3f;text-shadow:0 0 14px rgba(255,207,63,.85),0 0 28px rgba(255,95,162,.5);
+    animation:pfPulse .7s ease-in-out infinite}
+  @keyframes pfPulse{0%,100%{transform:scale(1);filter:brightness(1)}50%{transform:scale(1.12);filter:brightness(1.25)}}
+  .px-anim.perfect-glow{filter:drop-shadow(0 0 10px rgba(255,207,63,.9)) drop-shadow(0 0 20px rgba(255,95,162,.6))}
   .delta{font-size:15px;color:var(--sub);line-height:1.7;margin-top:6px}
   .delta b{color:var(--txt)}
   .ev-card{background:var(--panel);border:1px solid var(--line);border-radius:20px;padding:22px 20px;width:100%}
@@ -498,10 +502,14 @@ const RESULT_FX = {
   fail: {motion:"rx-droop", burst:"none"},
   ok:   {motion:"rx-ok",    burst:"small"},
   great:{motion:"rx-jump",  burst:"party"},
+  perfect:{motion:"rx-jump",burst:"party"},   // 각성 — great 모션 재사용 + 골드 연출은 CSS
 };
 
 // 컨디션이 핵심 레버: 높으면 대성공↑·안정, 낮으면 대실패 급증·대성공 희박.
 // 컨디션 0에서 훈련하면 대실패/실패가 70%+ → 사실상 도박(재율애비 요청: 저컨디션 페널티 크게)
+// 각성(퍼펙트): 고컨디션에서만 대성공 일부가 초대성공으로 승격되는 팻테일.
+// 순수로또 아님 — 컨디션 관리(실력)해야 확률이 오르고, 이게 프레스티지 엔딩의 상위 꼬리를 만듦.
+const PERF = { condMin:78, pMax:0.16, mult:4.6 };
 function rollJudge(cond, mental){
   let pGreat = Math.max(0, 0.03 + cond*0.0035);            // 0:0.03  50:0.205  100:0.38
   let pDbad  = Math.max(0.02, 0.44 - cond*0.0052 - mental/1400); // 0:~0.41 50:~0.15 100:~0.02
@@ -509,7 +517,10 @@ function rollJudge(cond, mental){
   const r = Math.random();
   if(r < pDbad) return "dbad";
   if(r < pDbad + pFail) return "fail";
-  if(r > 1 - pGreat) return "great";
+  if(r > 1 - pGreat){
+    const pp = cond>=PERF.condMin ? PERF.pMax*((cond-PERF.condMin)/(100-PERF.condMin)) : 0;
+    return Math.random()<pp ? "perfect" : "great";
+  }
   return "ok";
 }
 // label은 i18n(j_*)로 렌더 — 여기선 연출/수치만
@@ -518,11 +529,12 @@ const JUDGE = {
   fail:{cls:"f",  jk:"fail", emoji:"😥", mult:0.28, cond:-14, fanMult:0.4},
   ok:  {cls:"s",  jk:"ok",   emoji:"👍", mult:1.0,  cond:-9,  fanMult:1.0},
   great:{cls:"dg",jk:"great",emoji:"🔥", mult:2.1,  cond:-4,  fanMult:2.3},
+  perfect:{cls:"pf",jk:"perfect",emoji:"🌟", mult:PERF.mult, cond:-2, fanMult:3.2},
 };
 
 // 성장곡선(등급별 계단식 우하향): 낮은 등급 쭉쭉(도파민) → 높은 등급 뻑뻑.
 // level 0~7 = F E D C B A S SS. 등급 오를수록 같은 훈련이 덜 오름.
-const GROWTH_BY_LEVEL=[2.6, 2.4, 2.1, 1.75, 1.35, 0.92, 0.5, 0.24];
+const GROWTH_BY_LEVEL=[2.6, 2.4, 2.1, 1.75, 1.4, 1.05, 0.7, 0.35];
 function growthMult(p){ return GROWTH_BY_LEVEL[levelOf(p)]; }
 
 // 선택지 두 종류:
@@ -877,10 +889,13 @@ const Game = {
     clearTimeout(this._pxPhase);
     this._pxPhase=setTimeout(()=>{
       const el=document.getElementById('emoChar');
-      if(el){ el.src=`assets/pixel/anim_${jkey}.png`; el.classList.add('pop'); }
+      const sprite = jkey==="perfect" ? "great" : jkey;   // 각성 스프라이트 없음 → great 재사용
+      if(el){ el.src=`assets/pixel/anim_${sprite}.png`; el.classList.add('pop');
+              if(jkey==="perfect") el.classList.add('perfect-glow'); }
       const holder=document.querySelector('.px-holder');
       if(holder) holder.querySelectorAll('.px-note').forEach(n=>n.remove()); // 결과엔 음표 제거
-      if(R.burst==="party") this.pxSparkle(ov,18,null,false);
+      if(jkey==="perfect") this.pxSparkle(ov,34,['#ffd35c','#ffe98a','#fff4c2','#ff5fa2'],false);
+      else if(R.burst==="party") this.pxSparkle(ov,18,null,false);
       else if(R.burst==="small") this.pxSparkle(ov,7,['#4fd6a0','#5fc9ff','#ffd35c'],false);
       const sayEl=document.getElementById('pxSay');
       if(sayEl){ sayEl.textContent=say||""; sayEl.style.color="var(--txt)"; }
@@ -1155,7 +1170,7 @@ const Game = {
       return {emoji:"🌗",name:t("e_local_n",{stat:topName}),tier:"C",sub:t("e_local_s",{stat:topName})};
     }
     const champ=finalRank===1, podium=finalRank<=3;
-    const superA = minV>=410 && total>=2750;   // 6각 모두 A이상
+    const superA = minV>=500 && total>=3050;   // 희귀 프레스티지: 6각 모두 A+ 정상급 + 각성. 실측 엘리트 ~0.6%, 그 외 ~0% (로깅으로 조임)
     const onetop  = top.v>=620 && gap>=180;      // 한 스탯 S~SS 원톱
     const allround= minV>=340 && total>=2400;
     const solid   = minV>=230 && total>=1900;
@@ -1194,6 +1209,7 @@ const Game = {
     if(!shared) s.fans+=Math.round(statTotal*35 + s.mental*8);  // 공유 결과는 이미 최종 팬
     const end=this.ending(reachedWorld, finalRank);
     const dexNew=shared ? false : this.dexAdd(dexIdOf(end));   // 엔딩 도감 기록 (첫 달성이면 true)
+    if(!shared && end.tier==="SS") this.logPrestige(s, statTotal, finalRank);  // 프레스티지 배출 로깅(실측·조임용)
     const statVals=STATS.map(st=>({n:st.n,k:st.k,c:st.c,v:Math.round(s[st.k]),g:grade(Math.round(s[st.k]))}));
     const overall=grade(Math.round(statTotal/STATS.length));
     const spStat=STATS.find(x=>x.k===s.idol.spec)||STATS[0];
@@ -1450,6 +1466,21 @@ const Game = {
     this.refreshTitle();
   },
   refreshTitle(){ const b=document.getElementById("continueBtn"); if(b) b.style.display=this.hasSave()?"":"none"; },
+
+  // ===== 프레스티지(육각형슈퍼스타) 배출 로깅 =====
+  // localStorage는 로컬이라 전역집계 불가 → 출시 후 실제 배출률 관찰용.
+  // PRESTIGE_LOG_URL 설정 시에만 원격 전송(fire-and-forget). 미설정이면 로컬 카운트만.
+  logPrestige(s, statTotal, finalRank){
+    try{
+      const n=(parseInt(localStorage.getItem("idol_prestige_count")||"0",10)||0)+1;
+      localStorage.setItem("idol_prestige_count", String(n));
+      const rec={total:Math.round(statTotal), minV:Math.round(Math.min(...STATS.map(x=>s[x.k]))),
+        rank:finalRank||null, at:new Date().toISOString(), local_n:n};
+      console.log("[PRESTIGE] 육각형슈퍼스타 배출", rec);
+      const URL=window.PRESTIGE_LOG_URL;   // 엔드포인트 생기면 여기 지정
+      if(URL && navigator.sendBeacon){ navigator.sendBeacon(URL, JSON.stringify(rec)); }
+    }catch(e){}
+  },
 
   // ===== 엔딩 도감 =====
   dexGot(){ try{ return new Set(JSON.parse(localStorage.getItem("idol_dex")||"[]")); }catch(e){ return new Set(); } },
