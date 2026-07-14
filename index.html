@@ -312,6 +312,15 @@
     -webkit-touch-callout:default;touch-callout:default}
   .cardsave-sub{font-size:12px;color:var(--sub);line-height:1.5;margin-top:12px;text-align:center}
   .cardsave-sub b{color:var(--txt)}
+
+  /* 언어 스위처 · 공유 배너 */
+  .langsel{position:absolute;top:12px;right:12px;z-index:5;appearance:none;border:1px solid var(--line);
+    border-radius:10px;background:var(--panel);color:var(--sub);font-size:12px;font-weight:700;
+    padding:6px 26px 6px 10px;font-family:inherit;cursor:pointer;
+    background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6'%3E%3Cpath fill='%239a8f9a' d='M0 0l5 6 5-6z'/%3E%3C/svg%3E");
+    background-repeat:no-repeat;background-position:right 10px center}
+  .shared-banner{text-align:center;font-size:14px;font-weight:800;color:var(--accent);
+    background:var(--panel2);border:1px solid var(--line);border-radius:14px;padding:10px 14px;margin-bottom:12px}
 </style>
 
 <div id="app">
@@ -319,18 +328,19 @@
 
   <!-- TITLE -->
   <section class="screen on" id="s-title">
+    <select id="langSel" class="langsel" onchange="Game.changeLang(this.value)" aria-label="language" style="display:none"></select>
     <div class="spacer"></div>
     <img id="titleMascot" src="assets/mascot.png" alt="">
     <img id="logo" src="assets/logo.png" alt="최애돌">
-    <h1 class="center" style="font-size:21px;margin-top:12px">아이돌 육성 타이쿤</h1>
-    <p class="muted center" style="margin-top:9px">
+    <h1 class="center" style="font-size:21px;margin-top:12px" data-i18n="t_title">아이돌 육성 타이쿤</h1>
+    <p class="muted center" style="margin-top:9px" data-i18n-html="t_tagline">
       최애를 데뷔시키고 세계로.<br>52주 동안 6가지 재능을 키워<br>어떤 슈퍼스타가 되는지 겨뤄봐.</p>
     <div class="spacer"></div>
-    <button class="btn" id="continueBtn" style="display:none;margin-bottom:9px" onclick="Game.continueGame()">▶ 이어하기</button>
-    <button class="btn" onclick="Game.goSelect()">최애 고르기 →</button>
+    <button class="btn" id="continueBtn" style="display:none;margin-bottom:9px" onclick="Game.continueGame()" data-i18n="t_continue">▶ 이어하기</button>
+    <button class="btn" onclick="Game.goSelect()" data-i18n="t_pick">최애 고르기 →</button>
     <div style="display:flex;gap:9px;margin-top:9px">
-      <button class="btn ghost" style="flex:1" onclick="Game.showDex()">📖 엔딩 도감</button>
-      <button class="btn ghost" style="flex:1" onclick="Game.showBoard()">🏆 명예의 전당</button>
+      <button class="btn ghost" style="flex:1" onclick="Game.showDex()" data-i18n="t_dex">📖 엔딩 도감</button>
+      <button class="btn ghost" style="flex:1" onclick="Game.showBoard()" data-i18n="t_hall">🏆 명예의 전당</button>
     </div>
     <div class="spacer"></div>
   </section>
@@ -390,6 +400,7 @@
   <!-- END -->
   <section class="screen" id="s-end">
     <div class="spacer"></div>
+    <div class="shared-banner" id="sharedBanner" style="display:none"></div>
     <div class="endtitle center" id="endStage">—</div>
     <div class="end-idol" id="endIdolBox">
       <img class="end-avatar" id="endAvatar" src="" alt="">
@@ -401,9 +412,10 @@
     <div id="radarWrap"><canvas id="radar" width="580" height="580"></canvas></div>
     <div class="ograde" id="oGrade"></div>
     <div class="growth" id="growthBox" style="display:none"></div>
-    <button class="btn" id="shareBtn" style="margin-top:14px" onclick="Game.shareCard()">📸 결과 카드 저장 · 공유</button>
-    <input class="name" id="nameInput" placeholder="이름을 남겨봐 (리더보드)" maxlength="10">
-    <button class="btn ghost" id="saveBtn" style="margin-top:9px" onclick="Game.saveScore()">🏆 명예의 전당 등록</button>
+    <button class="btn" id="shareLinkBtn" style="margin-top:14px" onclick="Game.shareLink()" data-i18n="share_link_btn">🔗 결과 공유하기</button>
+    <button class="btn ghost" id="shareBtn" style="margin-top:9px" onclick="Game.shareCard()" data-i18n="share_btn">📸 이미지로 저장</button>
+    <input class="name" id="nameInput" placeholder="이름을 남겨봐 (리더보드)" maxlength="10" data-i18n-ph="name_ph">
+    <button class="btn ghost" id="saveBtn" style="margin-top:9px" onclick="Game.saveScore()" data-i18n="save_btn">🏆 명예의 전당 등록</button>
     <div class="lb" id="lbBox"></div>
     <button class="btn ghost" id="againBtn" style="margin-top:12px" onclick="Game.reset()">홈으로</button>
     <div class="spacer"></div>
@@ -424,6 +436,7 @@
   <div class="loading" id="loading"></div>
 </div>
 
+<script src="i18n.js"></script>
 <script src="idols.js"></script>
 <script>
 // 검색용 아이돌: idols.js의 window.IDOL_DB (최애돌 실데이터 상위 250명). 로드 실패 시 빈 배열.
@@ -1169,13 +1182,13 @@ const Game = {
       sub:`한 방은 없지만 꾸준함으로 승부하는 롱런형. 이것도 능력이야.`};
   },
 
-  finish(reachedWorld, finalRank){
-    this.clearSave();   // 게임 종료 — 이어하기 삭제
+  finish(reachedWorld, finalRank, shared){
+    if(!shared) this.clearSave();   // 게임 종료 — 이어하기 삭제
     const s=this.st;
     const statTotal=STATS.reduce((a,st)=>a+s[st.k],0);
-    s.fans+=Math.round(statTotal*35 + s.mental*8);
+    if(!shared) s.fans+=Math.round(statTotal*35 + s.mental*8);  // 공유 결과는 이미 최종 팬
     const end=this.ending(reachedWorld, finalRank);
-    const dexNew=this.dexAdd(dexIdOf(end));   // 엔딩 도감 기록 (첫 달성이면 true)
+    const dexNew=shared ? false : this.dexAdd(dexIdOf(end));   // 엔딩 도감 기록 (첫 달성이면 true)
     const statVals=STATS.map(st=>({n:st.n,k:st.k,c:st.c,v:Math.round(s[st.k]),g:grade(Math.round(s[st.k]))}));
     const overall=grade(Math.round(statTotal/STATS.length));
     const spStat=STATS.find(x=>x.k===s.idol.spec)||STATS[0];
@@ -1200,13 +1213,65 @@ const Game = {
     if(s.log && s.log.length){ gbox.style.display="";
       gbox.innerHTML=`<h3>📖 ${esc(s.idol.name)}의 성장 서사</h3>`+s.log.map(l=>`<div class="gl">${l}</div>`).join(""); }
     else gbox.style.display="none";
-    ["shareBtn","nameInput","saveBtn"].forEach(id=>document.getElementById(id).style.display="");
-    document.getElementById("nameInput").value="";
-    document.getElementById("againBtn").textContent="다시 하기";
+    const sharedBanner=document.getElementById("sharedBanner");
+    if(shared){
+      // 공유 링크로 열린 결과: 리더보드/등록 숨기고 '나도 해보기' CTA
+      ["shareLinkBtn","shareBtn","nameInput","saveBtn","lbBox"].forEach(id=>{const e=document.getElementById(id);if(e)e.style.display="none";});
+      sharedBanner.style.display="";
+      sharedBanner.innerHTML=`<b>${esc(s.idol.name)}</b>${t("shared_banner")}`;
+      document.getElementById("againBtn").textContent=t("shared_cta");
+      document.getElementById("againBtn").onclick=()=>Game.goSelect();
+    } else {
+      sharedBanner.style.display="none";
+      ["shareLinkBtn","shareBtn","nameInput","saveBtn","lbBox"].forEach(id=>{const e=document.getElementById(id);if(e)e.style.display="";});
+      document.getElementById("nameInput").value="";
+      document.getElementById("againBtn").textContent=t("again_btn");
+      document.getElementById("againBtn").onclick=()=>Game.reset();
+      this.renderBoard(null);
+      this.prepCard();   // 카드 미리 생성 (저장 버튼 제스처 소진 방지)
+    }
+    document.getElementById("endStage").textContent=
+      reachedWorld?(finalRank?t("end_stage_world",{rank:finalRank}):t("end_stage_world_nr")):t("end_stage_out");
     drawRadar(document.getElementById("radar"), statVals, {dark:false});
-    this.renderBoard(null);
     show("s-end");
-    this.prepCard();   // 카드 미리 생성 (저장 버튼 제스처 소진 방지)
+  },
+  // 결과 → 공유 링크 인코딩/디코딩
+  encodeResult(){
+    const r=this.lastResult; if(!r) return "";
+    const arr=[r.name, r.grp, r.spec, ...r.statVals.map(v=>v.v), Math.round(r.fans),
+      r.finalRank||0, r.reachedWorld?1:0];
+    try{ return "r="+encodeURIComponent(btoa(unescape(encodeURIComponent(JSON.stringify(arr))))); }
+    catch(e){ return ""; }
+  },
+  decodeResult(enc){
+    try{ const arr=JSON.parse(decodeURIComponent(escape(atob(decodeURIComponent(enc)))));
+      return {name:arr[0], grp:arr[1], spec:arr[2], v:arr.slice(3,9).map(Number),
+        fans:+arr[9], rank:+arr[10]||null, world:!!arr[11]}; }
+    catch(e){ return null; }
+  },
+  shareLink(){
+    const enc=this.encodeResult(); if(!enc){ toast(t("toast_save_broken")); return; }
+    const url=location.origin+location.pathname+"?"+enc;
+    const r=this.lastResult;
+    const shareData={title:t("t_title"), text:t("share_text",{name:r.name,ending:r.ending}), url};
+    if(navigator.share){
+      navigator.share(shareData).catch(e=>{ if(e.name!=="AbortError") this.copyLink(url); });
+    } else { this.copyLink(url); }
+  },
+  copyLink(url){
+    if(navigator.clipboard && navigator.clipboard.writeText){
+      navigator.clipboard.writeText(url).then(()=>toast(t("toast_link_copied"))).catch(()=>this.promptLink(url));
+    } else this.promptLink(url);
+  },
+  promptLink(url){ window.prompt(t("toast_link_copied"), url); },
+  // 공유 링크로 열렸을 때 결과 재현
+  showSharedResult(d){
+    const st=STATS.map(x=>x.k);
+    this.st={idol:{name:d.name, grp:d.grp||t("custom_idol"), spec:d.spec, img:""},
+      mental:60, fans:d.fans, week:52, log:[]};
+    st.forEach((k,i)=>this.st[k]=d.v[i]||0);
+    this.lastResult=null;
+    this.finish(d.world, d.rank, true);
   },
 
   // ===== 결과 카드 이미지 =====
@@ -1467,6 +1532,30 @@ function esc(s){return (s||"").replace(/[<>&]/g,c=>({"<":"&lt;",">":"&gt;","&":"
 let toastTimer;
 function toast(msg){const t=document.getElementById("toast");t.textContent=msg;t.className="toast on";
   clearTimeout(toastTimer);toastTimer=setTimeout(()=>t.className="toast",1900);}
-// 타이틀 진입 시 이어하기 버튼 노출
+
+// ===== 다국어 적용 =====
+function applyI18n(){
+  document.querySelectorAll("[data-i18n]").forEach(el=>{ el.textContent=t(el.dataset.i18n); });
+  document.querySelectorAll("[data-i18n-html]").forEach(el=>{ el.innerHTML=t(el.dataset.i18nHtml); });
+  document.querySelectorAll("[data-i18n-ph]").forEach(el=>{ el.placeholder=t(el.dataset.i18nPh); });
+  document.title=t("t_title");
+}
+function initLangSwitch(){
+  const sel=document.getElementById("langSel"); if(!sel) return;
+  sel.innerHTML=langList().map(l=>`<option value="${l.code}"${l.code===window.LANG?" selected":""}>${l.name}</option>`).join("");
+}
+Game.changeLang=function(l){ setLang(l); applyI18n(); initLangSwitch();
+  document.getElementById("customName")&&(document.getElementById("customName").placeholder=t("sel_name_ph")); };
+
+// 초기화
+initLangSwitch();
+applyI18n();
 Game.refreshTitle();
+// 공유 링크(?r=...)로 열렸으면 그 결과를 바로 재현
+(function(){
+  const enc=new URLSearchParams(location.search).get("r");
+  if(!enc) return;
+  const d=Game.decodeResult(enc);
+  if(d && d.name && d.v && d.v.length===6) Game.showSharedResult(d);
+})();
 </script>
