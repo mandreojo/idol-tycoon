@@ -633,11 +633,11 @@ const RIVAL_EMOJI = ["💫","⚡","🌙","🥀","🌸","🔮","🌌","🖤","✴
 // 52주 3막: 데뷔 12주 / 국내 20·28 / 국내대상 36(월드 진출 관문) / 월드 44 / 글로벌대상 52.
 const AWARD_PEAK_K = 0.34;   // 시상식에서 원톱 스탯 반영 계수(낮을수록 몰빵 불리)
 const COMPETS = {
-  20:{type:"stage", emoji:"📺", title:"첫 음악방송 1위 도전",  field:["vocal","dance","visual","charm"], base:150},
-  28:{type:"stage", emoji:"🎬", title:"음악방송 2연속 1위 도전", field:["vocal","dance","visual","charm"], base:190},
-  36:{type:"award", emoji:"🏆", title:"국내 연말 가요대상",     base:290, gate:true},
-  44:{type:"stage", emoji:"🌍", title:"글로벌 뮤직쇼 1위 도전", field:["vocal","dance","visual","charm"], base:320},
-  52:{type:"award", emoji:"👑", title:"글로벌 뮤직 어워드 · 대상", base:490, final:true},
+  20:{type:"stage", emoji:"📺", tk:"cp_t_20", field:["vocal","dance","visual","charm"], base:150},
+  28:{type:"stage", emoji:"🎬", tk:"cp_t_28", field:["vocal","dance","visual","charm"], base:190},
+  36:{type:"award", emoji:"🏆", tk:"cp_t_36", base:290, gate:true},
+  44:{type:"stage", emoji:"🌍", tk:"cp_t_44", field:["vocal","dance","visual","charm"], base:320},
+  52:{type:"award", emoji:"👑", tk:"cp_t_52", base:490, final:true},
 };
 
 // ===== 엔딩 도감 (반복 플레이 훅) =====
@@ -957,11 +957,11 @@ const Game = {
   hasSave(){ try{ return !!localStorage.getItem("idol_save"); }catch(e){ return false; } },
   continueGame(){
     let raw; try{ raw=localStorage.getItem("idol_save"); }catch(e){}
-    if(!raw){ toast("저장된 게임이 없어"); return; }
-    try{ this.st=JSON.parse(raw); }catch(e){ toast("저장 파일을 못 읽었어"); this.clearSave(); return; }
+    if(!raw){ toast(t("toast_no_save")); return; }
+    try{ this.st=JSON.parse(raw); }catch(e){ toast(t("toast_save_broken")); this.clearSave(); return; }
     if(!this.st.log) this.st.log=[];
     show("s-play"); this.startWeek();
-    toast(`WEEK ${this.st.week}부터 이어서!`);
+    toast(t("toast_resume",{w:this.st.week}));
   },
 
   showEvent(done){
@@ -1005,13 +1005,13 @@ const Game = {
     const pass = total>=340 || peak>=150;
     const bonus = pass ? Math.round(1500+total*4) : Math.round(total*2);
     s.fans+=bonus;
-    this.logWeek(pass?`🎊 <b>데뷔 성공!</b> 화려하게 데뷔했어`:`😅 <b>언더독 데뷔</b> — 아슬아슬 무대에 섰어`);
+    this.logWeek(pass?t("debut_pass_log"):t("debut_fail_log"));
     const ov=document.getElementById("ov"); ov.className="ov on"; ov.onclick=null;
     ov.innerHTML=`<div class="ev-card"><div class="ev-emoji">${pass?"🎊":"😅"}</div>
-      <div class="ev-title">${pass?"🎉 데뷔 성공!":"😬 언더독 데뷔"}</div>
-      <div class="ev-text">${pass?"실력 합격! 화려하게 데뷔했어.":"아슬아슬하게 데뷔… 갈 길이 멀어."}<br>
-      데뷔 팬 <b>+${fmt(bonus)}</b><br><br>이제 <b>국내 시장</b>에서 라이벌들과 경쟁이 시작된다.</div>
-      <button class="btn" onclick="Game.afterDebut()">11주차로 →</button></div>`;
+      <div class="ev-title">${pass?t("debut_pass_title"):t("debut_fail_title")}</div>
+      <div class="ev-text">${pass?t("debut_pass_text"):t("debut_fail_text")}<br>
+      ${t("debut_body",{bonus:fmt(bonus)})}</div>
+      <button class="btn" onclick="Game.afterDebut()" data-i18n="debut_next">${t("debut_next")}</button></div>`;
   },
 
   // 라이벌과 순위 대결 (필수 경쟁 이벤트)
@@ -1036,36 +1036,36 @@ const Game = {
 
   resolveCompet(c, board, myRank){
     const s=this.st, N=board.length, win=myRank===1;
-    let head, sub, btn="계속 →", onCont=()=>{ document.getElementById("ov").className="ov"; this.nextWeek(); };
+    let head, sub, btn=t("cp_cont"), onCont=()=>{ document.getElementById("ov").className="ov"; this.nextWeek(); };
 
     if(c.type==="stage"){
       if(win){ s.fans+=Math.round(2200+c.base*45); s.mental+=8; s.cond=Math.max(0,s.cond-6);
-        head="🏆 음악방송 1위!"; sub="트로피 들고 앵콜! 팬덤이 폭발했어."; }
+        head=t("cp_stage_win_head"); sub=t("cp_stage_win_sub"); }
       else if(myRank<=3){ s.fans+=Math.round(700); s.mental+=3;
-        head=`${myRank}위 · 상위권`; sub="1위는 놓쳤지만 존재감은 확실히 남겼어."; }
+        head=t("cp_stage_top_head",{rank:myRank}); sub=t("cp_stage_top_sub"); }
       else { s.fans+=150; s.mental=Math.max(0,s.mental-6); s.cond=Math.max(0,s.cond-4);
-        head=`${myRank}위 · 순위권 밖`; sub="이번 컴백은 묻혔어… 다음을 노리자."; }
+        head=t("cp_stage_out_head",{rank:myRank}); sub=t("cp_stage_out_sub"); }
     }
     else if(c.gate){   // 국내 대상 = 월드 진출 관문 (1위만!)
       if(win){ const b=Math.round(3800+s.fans*0.04); s.fans+=b; s.mental+=6;
-        head="🏆 대상 수상!"; sub=`국내 정상을 찍었어! 팬 <b>+${fmt(b)}</b><br>이제 <b>월드 무대</b>로! 보너스 10주.`;
-        btn="Road to World →";
+        head=t("cp_gate_win_head"); sub=t("cp_gate_win_sub",{b:fmt(b)});
+        btn=t("cp_gate_win_btn");
         onCont=()=>{ document.getElementById("ov").className="ov";
-          this.cutscene({act:"ACT 3", emoji:"✈️", title:"월드 무대", sub:"ROAD TO THE WORLD",
-            talk:"국내 정상 찍었어! 🏆 이제 전 세계가 무대야. 마지막 10주, 글로벌 대상까지 가보자!"},
+          this.cutscene({act:t("cs_act3"), emoji:"✈️", title:t("cs3_title"), sub:t("cs3_sub"),
+            talk:t("cs3_talk")},
             ()=>this.nextWeek()); };
-      } else { s.fans+=400; head=`${myRank}위 · 대상 불발`;
-        sub="국내 대상 <b>1위</b>만 월드 무대에 설 수 있어. 정상의 벽을 넘지 못했어…";
-        onCont=()=>{ document.getElementById("ov").className="ov"; this.finish(false); }; btn="결과 확인 →"; }
+      } else { s.fans+=400; head=t("cp_gate_lose_head",{rank:myRank});
+        sub=t("cp_gate_lose_sub");
+        onCont=()=>{ document.getElementById("ov").className="ov"; this.finish(false); }; btn=t("cp_result"); }
     }
     else if(c.final){  // 글로벌 대상 = 최종
       const b=Math.round(4000+(N-myRank+1)*1900+s.fans*0.04); s.fans+=b;
-      head = win?"👑 글로벌 대상 수상!":`${myRank}위`;
-      sub = `${win?"세계가 인정했어. 정점이야.":"월드 무대의 여정을 마쳤어."}<br>대상 팬 <b>+${fmt(b)}</b>`;
+      head = win?t("cp_final_win_head"):t("cp_final_lose_head",{rank:myRank});
+      sub = (win?t("cp_final_win_sub"):t("cp_final_lose_sub"))+t("cp_final_bonus",{b:fmt(b)});
       onCont=()=>{ document.getElementById("ov").className="ov";
-        this.resultLoading(()=>this.finish(true, myRank)); }; btn="최종 결과 →";
+        this.resultLoading(()=>this.finish(true, myRank)); }; btn=t("cp_final_btn");
     }
-    this.logWeek(`${c.emoji} <b>${c.title}</b> — ${head.replace(/<[^>]+>/g,"")}`);
+    this.logWeek(`${c.emoji} <b>${t(c.tk)}</b> — ${head.replace(/<[^>]+>/g,"")}`);
     this.showCompetBoard(c, board, myRank, head, sub, btn, onCont);
   },
 
@@ -1074,11 +1074,11 @@ const Game = {
     const rows=board.map((r,i)=>{
       const medal=["🥇","🥈","🥉"][i]||`${i+1}`;
       return `<div class="lb-row ${r.me?"me":""}"><span class="r">${medal}</span>
-        <span class="who">${r.emoji} ${esc(r.name)}${r.me?" <small>· 나</small>":""}</span>
+        <span class="who">${r.emoji} ${esc(r.name)}${r.me?t("cp_me"):""}</span>
         <span class="sc" style="color:var(--sub)">${Math.round(r.score)}</span></div>`;
     }).join("");
     ov.innerHTML=`<div class="ev-card"><div class="ev-emoji">${c.emoji}</div>
-      <div class="ev-title">${c.title}</div>
+      <div class="ev-title">${t(c.tk)}</div>
       <div class="ev-text" style="margin-bottom:8px"><b style="color:var(--txt);font-size:16px">${head}</b><br>${sub}</div>
       <div class="lb" style="margin:0 0 14px;text-align:left">${rows}</div>
       <button class="btn" id="competCont">${btnLabel}</button></div>`;
@@ -1097,7 +1097,7 @@ const Game = {
         <div class="cs-sub">${opt.sub}</div>
         <div class="cs-talk"><img class="cs-mascot" src="assets/mascot.png" alt="">
           <div class="cs-bubble">${opt.talk}</div></div>
-      </div><div class="cs-tap">탭하여 계속 →</div>`;
+      </div><div class="cs-tap">${t("tap_continue")} →</div>`;
     let done=false;
     const go=()=>{ if(done) return; done=true; cs.onclick=null; cs.className="cutscene"; cb&&cb(); };
     cs.onclick=go;
@@ -1105,8 +1105,8 @@ const Game = {
   },
   afterDebut(){
     document.getElementById("ov").className="ov";
-    this.cutscene({act:"ACT 2", emoji:"🎤", title:"국내 시장 진출", sub:"DOMESTIC MARKET",
-      talk:"데뷔 성공! 🎉 이제 국내 라이벌들과 진짜 승부야. 음악방송·시상식 1위 노려보자!"},
+    this.cutscene({act:t("cs_act2"), emoji:"🎤", title:t("cs2_title"), sub:t("cs2_sub"),
+      talk:t("cs2_talk")},
       ()=>this.nextWeek());
   },
 
@@ -1115,9 +1115,9 @@ const Game = {
     const el=document.getElementById("loading");
     el.className="loading on";
     el.innerHTML=`<div class="load-ring"></div>
-      <div class="load-txt">최종 집계 중…</div>
-      <div class="load-step" id="loadStep">전 세계 투표 취합 중…</div>`;
-    const steps=["전 세계 투표 취합 중…","글로벌 차트 반영 중…","최종 팬덤 규모 확정 중…","결과 카드 생성 중…"];
+      <div class="load-txt">${t("load_title")}</div>
+      <div class="load-step" id="loadStep">${t("load_s1")}</div>`;
+    const steps=[t("load_s1"),t("load_s2"),t("load_s3"),t("load_s4")];
     let i=0; const st=document.getElementById("loadStep");
     const iv=setInterval(()=>{ i++; if(i<steps.length) st.textContent=steps[i]; }, 780);
     setTimeout(()=>{ clearInterval(iv); el.className="loading"; cb&&cb(); }, 3400);
@@ -1130,17 +1130,12 @@ const Game = {
     const gap=top.v-arr[1].v;
     const stage4=(s.vocal+s.dance+s.visual+s.charm)/4;   // 무대 4종 평균
     const stageStar = stage4>=440 && minV<340;            // 무대 특화(연기·크리 낮음)
-    const onetopTitles={vocal:"세계가 인정한 보컬리스트",dance:"월드클래스 퍼포머",
-      visual:"글로벌 비주얼 아이콘",charm:"예능·화제성 끝판왕",
-      acting:"스크린을 접수한 배우돌",creative:"자컨·자작곡 아티스트"};
+    const topName=t("st_"+top.k);
 
     if(!reachedWorld){
-      if(total<680 && top.v<430) return {emoji:"💔",name:"팀 해체",tier:"F",
-        sub:`국내의 벽을 넘지 못하고 해체됐어… 다음 생엔 꼭.`};
-      if(stageStar) return {emoji:"🎭",name:"무대형 지역 스타",tier:"C",
-        sub:`무대 위에선 빛났지만 국내 대상의 벽은 높았어. 무대장악력은 진짜였어.`};
-      return {emoji:"🌗",name:`${top.n} 지역 스타`,tier:"C",
-        sub:`국내 대상 1위는 놓쳤지만 <b>${top.n}</b> 하나로 단단한 마니아 팬층을 남겼어.`};
+      if(total<680 && top.v<430) return {emoji:"💔",name:t("e_disband_n"),tier:"F",sub:t("e_disband_s")};
+      if(stageStar) return {emoji:"🎭",name:t("e_stagelocal_n"),tier:"C",sub:t("e_stagelocal_s")};
+      return {emoji:"🌗",name:t("e_local_n",{stat:topName}),tier:"C",sub:t("e_local_s",{stat:topName})};
     }
     const champ=finalRank===1, podium=finalRank<=3;
     const superA = minV>=410 && total>=2750;   // 6각 모두 A이상
@@ -1149,38 +1144,30 @@ const Game = {
     const solid   = minV>=230 && total>=1900;
 
     // SS — 6각 완성 (실력이 SS급, 순위 무관)
-    if(superA) return {emoji:"🌟",name:"글로벌 육각형 슈퍼스타",tier:"SS",
-      sub:`약점이 없어. 6가지 재능 모두 정상급인 완성형 월드스타.${champ?" 글로벌 대상까지 석권한 역대급이야.":" 역대급이야."}`};
+    if(superA) return {emoji:"🌟",name:t("e_ss_n"),tier:"SS",
+      sub:t("e_ss_s",{champ:champ?t("e_ss_champ"):t("e_ss_nochamp")})};
     // S — 대상 1위 + 원톱
-    if(champ && onetop) return {emoji:"👑",name:onetopTitles[top.k],tier:"S",
-      sub:`<b>${top.n} ${grade(top.v)}등급.</b> 압도적 한 방으로 글로벌 대상을 거머쥐었어.`};
+    if(champ && onetop) return {emoji:"👑",name:t("ot_"+top.k),tier:"S",
+      sub:t("e_onetop_champ_s",{stat:topName,g:grade(top.v)})};
     // S — 대상 1위 + 올라운더
-    if(champ && allround) return {emoji:"🏆",name:"월드 정상 올라운더",tier:"S",
-      sub:`고르게 최상급인 육각형으로 글로벌 대상까지! 오래 사랑받을 대형 스타.`};
+    if(champ && allround) return {emoji:"🏆",name:t("e_allround_champ_n"),tier:"S",sub:t("e_allround_champ_s")};
     // S — 원톱 실력으로 상위 입상
-    if(onetop && podium) return {emoji:"👑",name:onetopTitles[top.k],tier:"S",
-      sub:`<b>${top.n} ${grade(top.v)}등급.</b> 확실한 한 방으로 세계 정상권에 섰어.`};
+    if(onetop && podium) return {emoji:"👑",name:t("ot_"+top.k),tier:"S",
+      sub:t("e_onetop_podium_s",{stat:topName,g:grade(top.v)})};
     // S — 무대 4종 특화로 상위 입상
-    if(stageStar && podium) return {emoji:"🎆",name:"무대를 장악한 퍼포머",tier:"S",
-      sub:`보컬·댄스·비주얼·끼 4각이 압도적. 무대 위 카리스마로 세계를 홀렸어.`};
+    if(stageStar && podium) return {emoji:"🎆",name:t("e_stage_n"),tier:"S",sub:t("e_stage_s")};
     // S — 완성형 올라운더
-    if(allround) return {emoji:"🌈",name:"만능 올라운더 월드스타",tier:"S",
-      sub:`모난 데 없이 두루 잘하는 육각형. 오래 사랑받을 대형 스타야.`};
+    if(allround) return {emoji:"🌈",name:t("e_allround_n"),tier:"S",sub:t("e_allround_s")};
     // A — 무대형 (입상은 못했지만 무대는 최강)
-    if(stageStar) return {emoji:"🎭",name:"무대형 퍼포먼스 스타",tier:"A",
-      sub:`무대 위에선 최강. 예능·연기까지 갖추면 육각형도 노려볼만해.`};
+    if(stageStar) return {emoji:"🎭",name:t("e_stageA_n"),tier:"A",sub:t("e_stageA_s")};
     // A — 대상 1위지만 스탯은 평범 (화제성·팬덤으로 대관식)
-    if(champ) return {emoji:"🎉",name:"이변의 대관식",tier:"A",
-      sub:`압도적 실력은 아니어도 화제성과 팬덤으로 글로벌 대상을 차지했어. 이것도 스타의 자질이야.`};
+    if(champ) return {emoji:"🎉",name:t("e_crown_n"),tier:"A",sub:t("e_crown_s")};
     // A — 준수 + 상위 입상
-    if(solid && podium) return {emoji:"⭐",name:"믿고 보는 대형 스타",tier:"A",
-      sub:`빈틈 없이 성장했고 글로벌 시상식 입상까지. 어디 내놔도 손색없어.`};
+    if(solid && podium) return {emoji:"⭐",name:t("e_bigstar_n"),tier:"A",sub:t("e_bigstar_s")};
     // A — 준수
-    if(solid) return {emoji:"✨",name:"준수한 성장형 스타",tier:"A",
-      sub:`두루 준수하게 컸어. 다음 챕터가 더 기대되는 재목이야.`};
+    if(solid) return {emoji:"✨",name:t("e_solid_n"),tier:"A",sub:t("e_solid_s")};
     // B — 얇고 길게
-    return {emoji:"🌱",name:"얇고 길게 가는 아이돌",tier:"B",
-      sub:`한 방은 없지만 꾸준함으로 승부하는 롱런형. 이것도 능력이야.`};
+    return {emoji:"🌱",name:t("e_longrun_n"),tier:"B",sub:t("e_longrun_s")};
   },
 
   finish(reachedWorld, finalRank, shared){
@@ -1197,22 +1184,21 @@ const Game = {
       tier:end.tier,fans:s.fans,reachedWorld,statVals,overall,finalRank:finalRank||null,
       spec:s.idol.spec, specName:spStat.n, specIco:spStat.ico, specColor:spStat.c, img:s.idol.img||"",
       stage:reachedWorld?(finalRank?`글로벌 대상 ${finalRank}위`:"WORLD TOUR · WEEK 52"):"DOMESTIC 탈락"};
-    document.getElementById("endStage").textContent=
-      reachedWorld?(finalRank?`글로벌 대상 ${finalRank}위 · WEEK 52 종료`:"WORLD TOUR · WEEK 52 종료"):"DOMESTIC 탈락 · 육성 종료";
     document.getElementById("endIdolBox").style.display="";
     const eav=document.getElementById("endAvatar");
     if(s.idol.img){ eav.src=s.idol.img; eav.style.display=""; } else { eav.style.display="none"; }
+    const isCustom = s.idol.grp===t("custom_idol") || s.idol.grp==="커스텀 아이돌";
     document.getElementById("endIdolName").innerHTML=
-      esc(s.idol.name)+(s.idol.grp&&s.idol.grp!=="커스텀 아이돌"?` <small>${esc(s.idol.grp)}</small>`:` <small>커스텀</small>`);
+      esc(s.idol.name)+(s.idol.grp && !isCustom?` <small>${esc(s.idol.grp)}</small>`:` <small>${t("custom_short")}</small>`);
     document.getElementById("endEmoji").textContent=end.emoji;
     document.getElementById("endName").textContent=end.name;
-    const dexChip = dexNew ? `<div class="dex-unlock">🎉 새 엔딩 해금! · 도감에 기록됐어</div>` : "";
-    document.getElementById("endSub").innerHTML=`${dexChip}${end.sub}<br><br>최종 팬 <b style="color:var(--gold)">${fmt(s.fans)}</b>명`;
+    const dexChip = dexNew ? `<div class="dex-unlock">${t("end_dex_unlock")}</div>` : "";
+    document.getElementById("endSub").innerHTML=`${dexChip}${end.sub}<br><br>${t("end_fans",{fans:fmt(s.fans)})}`;
     document.getElementById("oGrade").innerHTML=
-      `종합 등급 <b>${overall}</b> &nbsp;·&nbsp; 타고난 재능 <b style="color:${spStat.c}">${spStat.ico} ${spStat.n}</b>`;
+      t("end_overall",{g:overall,c:spStat.c,ico:spStat.ico,spec:t("st_"+spStat.k)});
     const gbox=document.getElementById("growthBox");
     if(s.log && s.log.length){ gbox.style.display="";
-      gbox.innerHTML=`<h3>📖 ${esc(s.idol.name)}의 성장 서사</h3>`+s.log.map(l=>`<div class="gl">${l}</div>`).join(""); }
+      gbox.innerHTML=`<h3>${t("end_growth_title",{name:esc(s.idol.name)})}</h3>`+s.log.map(l=>`<div class="gl">${l}</div>`).join(""); }
     else gbox.style.display="none";
     const sharedBanner=document.getElementById("sharedBanner");
     if(shared){
@@ -1278,8 +1264,17 @@ const Game = {
   // ===== 결과 카드 이미지 =====
   async makeCard(){
     const r=this.lastResult; const W=1080,H=1350;
+    // 기기 무관 일관 렌더: 웹폰트(Jua) 로드 보장 후 그림. 없으면 sans-serif 폴백.
+    const FF="'Jua','Apple SD Gothic Neo','Noto Sans KR',sans-serif";
+    try{ await Promise.all([document.fonts.load("40px 'Jua'"), document.fonts.load("bold 40px 'Jua'")]); await document.fonts.ready; }catch(e){}
     const cv=document.createElement("canvas"); cv.width=W; cv.height=H;
     const x=cv.getContext("2d");
+    x.textBaseline="alphabetic";
+    // 긴 텍스트는 폭에 맞게 자동 축소(기기별 폰트 차 흡수)
+    const fit=(text,maxW,weight,startSize)=>{ let s=startSize;
+      x.font=`${weight} ${s}px ${FF}`;
+      while(s>20 && x.measureText(text).width>maxW){ s-=2; x.font=`${weight} ${s}px ${FF}`; }
+      return s; };
     // 밝은 앱톤 배경
     const bg=x.createLinearGradient(0,0,0,H);
     bg.addColorStop(0,"#ffe4ea"); bg.addColorStop(.5,"#fff2f4"); bg.addColorStop(1,"#ffffff");
@@ -1288,49 +1283,42 @@ const Game = {
     rg.addColorStop(0,"rgba(236,58,92,.16)"); rg.addColorStop(1,"rgba(236,58,92,0)");
     x.fillStyle=rg; x.fillRect(0,0,W,660);
     x.textAlign="center";
-    x.fillStyle="#ec3a5c"; x.font="700 30px 'Apple SD Gothic Neo',sans-serif";
-    x.fillText("최애돌 · 아이돌 육성 타이쿤", W/2, 74);
+    x.fillStyle="#ec3a5c"; fit(t("card_brand"),W-160,"700",30); x.fillText(t("card_brand"), W/2, 76);
     // 아이돌 원형 사진 (로컬/커스텀만 — 원격 URL은 canvas 오염 방지로 생략)
     const canUse = r.img && (r.img.startsWith('assets/') || r.img.startsWith('data:'));
     const face = canUse ? await loadImg(r.img) : null;
-    const CY=228, R=96;
+    const CY=232, R=96;
     if(face){
       x.save(); x.beginPath(); x.arc(W/2,CY,R,0,7); x.closePath(); x.clip();
       const iw=face.naturalWidth, ih=face.naturalHeight, m=Math.min(iw,ih);
       x.drawImage(face,(iw-m)/2,(ih-m)/2,m,m,W/2-R,CY-R,R*2,R*2); x.restore();
     } else {
       x.fillStyle="#ffe0e6"; x.beginPath(); x.arc(W/2,CY,R,0,7); x.fill();
-      x.font="86px sans-serif"; x.fillText("🎤",W/2,CY+30);
+      x.font="86px 'Apple Color Emoji','Noto Color Emoji',sans-serif"; x.fillText("🎤",W/2,CY+30);
     }
     x.beginPath(); x.arc(W/2,CY,R,0,7); x.lineWidth=6; x.strokeStyle="#ec3a5c"; x.stroke();
-    // 이름·그룹
-    x.fillStyle="#2b2530"; x.font="800 66px 'Apple SD Gothic Neo',sans-serif";
-    x.fillText(r.name, W/2, 396);
-    x.fillStyle="#9a8f9a"; x.font="600 32px 'Apple SD Gothic Neo',sans-serif";
-    x.fillText(r.grp, W/2, 442);
-    // 엔딩
-    x.font="62px sans-serif"; x.fillText(r.emoji, W/2, 528);
-    x.fillStyle="#ec3a5c"; x.font="800 46px 'Apple SD Gothic Neo',sans-serif";
-    x.fillText(r.ending, W/2, 588);
-    x.fillStyle="#9a8f9a"; x.font="600 28px 'Apple SD Gothic Neo',sans-serif";
-    x.fillText(`타고난 재능 · ${r.specName||"-"}`, W/2, 632);
+    // 이름 (긴 이름 자동 축소)
+    x.fillStyle="#2b2530"; fit(r.name,W-180,"800",66); x.fillText(r.name, W/2, 404);
+    // 그룹
+    x.fillStyle="#9a8f9a"; fit(r.grp,W-220,"600",32); x.fillText(r.grp, W/2, 450);
+    // 엔딩 이모지
+    x.fillStyle="#2b2530"; x.font="60px 'Apple Color Emoji','Noto Color Emoji',sans-serif"; x.fillText(r.emoji, W/2, 536);
+    // 엔딩명 (긴 엔딩명 자동 축소)
+    x.fillStyle="#ec3a5c"; fit(r.ending,W-140,"800",46); x.fillText(r.ending, W/2, 600);
+    // 타고난 재능
+    x.fillStyle="#9a8f9a"; fit(t("card_talent",{spec:t("st_"+r.spec)}),W-160,"600",28); x.fillText(t("card_talent",{spec:t("st_"+r.spec)}), W/2, 644);
     // radar
-    drawRadarCtx(x, W/2, 858, 186, r.statVals, {dark:false, big:true});
+    drawRadarCtx(x, W/2, 862, 182, r.statVals, {dark:false, big:true});
     // 하단 바 (흰 카드)
     x.fillStyle="#ffffff"; x.strokeStyle="#ffd9de"; x.lineWidth=2.5;
-    roundRect(x,80,1130,W-160,150,24); x.fill(); x.stroke();
+    roundRect(x,80,1132,W-160,148,24); x.fill(); x.stroke();
     x.textAlign="left";
-    x.fillStyle="#9a8f9a"; x.font="600 30px 'Apple SD Gothic Neo',sans-serif";
-    x.fillText("종합 등급", 130, 1190);
-    x.fillStyle=GRADE_COLOR[r.overall]; x.font="900 66px 'Apple SD Gothic Neo',sans-serif";
-    x.fillText(r.overall, 130, 1260);
+    x.fillStyle="#9a8f9a"; x.font=`600 30px ${FF}`; x.fillText(t("card_overall"), 130, 1192);
+    x.fillStyle=GRADE_COLOR[r.overall]; x.font=`900 64px ${FF}`; x.fillText(r.overall, 130, 1258);
     x.textAlign="right";
-    x.fillStyle="#9a8f9a"; x.font="600 30px 'Apple SD Gothic Neo',sans-serif";
-    x.fillText("최종 팬", W-130, 1190);
-    x.fillStyle="#f0a01e"; x.font="900 60px 'Apple SD Gothic Neo',sans-serif";
-    x.fillText(fmt(r.fans), W-130, 1258);
-    x.textAlign="center"; x.fillStyle="#b9adb4"; x.font="600 25px 'Apple SD Gothic Neo',sans-serif";
-    x.fillText("🐥 최애돌에서 내 최애 키우기", W/2, 1328);
+    x.fillStyle="#9a8f9a"; x.font=`600 30px ${FF}`; x.fillText(t("card_fans"), W-130, 1192);
+    x.fillStyle="#f0a01e"; fit(fmt(r.fans),380,"900",58); x.fillText(fmt(r.fans), W-130, 1258);
+    x.textAlign="center"; x.fillStyle="#b9adb4"; x.font=`600 25px ${FF}`; x.fillText(t("card_footer"), W/2, 1326);
     return cv;
   },
   // 결과화면 진입 시 카드 이미지를 미리 만들어 캐시 (저장 버튼의 제스처 소진 방지)
