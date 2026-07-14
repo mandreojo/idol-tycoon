@@ -529,6 +529,11 @@ const TRAIN_FX = {
   creative:{motion:"fx-create", notes:["🎶","💡","🎶"], word:"작업 중"},
   rest:    {motion:"fx-rest",   notes:["💤","💤","💤"], word:"휴식 중"},
 };
+// 활동별 담당 캐릭터(레티=토끼🐰 / 리니=오리🦆). 3:3 번갈아 — "하나로 돌려막기" 탈피.
+const ACT_CHAR = {
+  vocal:"rety", visual:"rety", acting:"rety",
+  charm:"rini", dance:"rini", creative:"rini", rest:"rini",
+};
 const RESULT_FX = {
   dbad: {motion:"rx-fall",  burst:"debris"},
   fail: {motion:"rx-droop", burst:"none"},
@@ -865,9 +870,10 @@ const Game = {
 
   train(kind){
     const s=this.st; if(s.busy) return; s.busy=true;
+    sfx(kind==="rest"?"rest":"click");   // 훈련 시작음(첫 제스처가 모바일 오디오 unlock도 겸함)
     if(kind==="rest"){
       const gain=26+Math.round(Math.random()*14);
-      s.cond=Math.min(100,s.cond+gain); s.mental+=3;
+      s.cond=Math.min(100,s.cond+gain); s.mental=Math.min(100,s.mental+8);
       this.trainReveal(s.idol, "rest", "ok", {cls:"s",label:t("rest_label"),emoji:"😌"},
         t("rest_delta",{g:gain}), t("rest_say"),
         ()=>{ this.render(); this.afterTurn(); });
@@ -905,24 +911,29 @@ const Game = {
     ov.className="ov on"; ov.onclick=null;
     const fx = TRAIN_FX[kind] || TRAIN_FX.vocal;
     const R  = RESULT_FX[jkey] || RESULT_FX.ok;
-    // ── Phase 1: 활동 (레티리니 픽셀 스프라이트 애니 + 활동별 음표) ──
-    const p1 = kind==="rest" ? "idle" : "work";
+    // 활동별 담당 캐릭터(레티=토끼 / 리니=오리). 결과 애니도 같은 캐릭터로 통일.
+    const cpfx = (ACT_CHAR[kind]||"rini")==="rety" ? "rety_" : "";
+    // ── Phase 1: 활동 (활동별 소품 픽셀 애니 + 활동별 음표) ──
+    // rest는 소품 없이 idle, 그 외는 활동전용 소품 애니(anim_act_*).
+    const p1src = kind==="rest" ? `assets/pixel/anim_${cpfx}idle.png`
+                                : `assets/pixel/anim_act_${kind}.png`;
     const notes = (fx.notes||["♪","♫","♪"]).map((n,i)=>
       `<span class="px-note n${i+1}">${n}</span>`).join("");
     ov.innerHTML=`<div class="px-stage" id="pxStage">
         <div class="px-holder">
-          <img class="px-anim" id="emoChar" src="assets/pixel/anim_${p1}.png" alt="">
+          <img class="px-anim" id="emoChar" src="${p1src}" alt="">
           ${notes}
         </div>
         <div class="px-floor"></div>
         <div class="train-say" id="pxSay">${t("fx_"+kind)}…</div>
       </div>`;
-    // ── Phase 2: 결과 (1.1초 뒤 결과 애니로 전환) ──
+    // ── Phase 2: 결과 (1.1초 뒤 결과 애니로 전환, 같은 캐릭터) ──
     clearTimeout(this._pxPhase);
     this._pxPhase=setTimeout(()=>{
       const el=document.getElementById('emoChar');
       const sprite = jkey==="perfect" ? "great" : jkey;   // 각성 스프라이트 없음 → great 재사용
-      if(el){ el.src=`assets/pixel/anim_${sprite}.png`; el.classList.add('pop');
+      sfx(jkey);   // 결과음(great/ok/fail/dbad/perfect) — 판정 애니 전환과 동시에
+      if(el){ el.src=`assets/pixel/anim_${cpfx}${sprite}.png`; el.classList.add('pop');
               if(jkey==="perfect") el.classList.add('perfect-glow'); }
       const holder=document.querySelector('.px-holder');
       if(holder) holder.querySelectorAll('.px-note').forEach(n=>n.remove()); // 결과엔 음표 제거
@@ -1001,7 +1012,9 @@ const Game = {
 
   // 훈련 끝 → 다음 주로. (관문·이벤트는 '주 시작'에서 처리 — 훈련효과와 분리)
   afterTurn(){ this.nextWeek(); },
-  nextWeek(){ this.st.week++; this.st.busy=false; this.save(); this.startWeek(); },
+  nextWeek(){ this.st.week++; this.st.busy=false;
+    this.st.mental=Math.min(100,this.st.mental+3);  // 주차 자동 멘탈 회복(고꾸라져도 서서히 복구)
+    this.save(); this.startWeek(); },
   // 주 시작: 데뷔/관문이면 바로 진행, 아니면 확률로 이벤트 → 닫으면 그 주 훈련 선택
   startWeek(){
     const s=this.st, w=s.week;
@@ -1278,7 +1291,7 @@ const Game = {
       ["shareLinkBtn","shareBtn","nameInput","saveBtn","lbBox"].forEach(id=>{const e=document.getElementById(id);if(e)e.style.display="";});
       document.getElementById("nameInput").value="";
       document.getElementById("againBtn").textContent=t("again_btn");
-      document.getElementById("againBtn").onclick=()=>Game.reset();
+      document.getElementById("againBtn").onclick=()=>Game.confirmReset();
       this.renderBoard(null);
       this.prepCard();   // 카드 미리 생성 (저장 버튼 제스처 소진 방지)
     }
@@ -1350,8 +1363,8 @@ const Game = {
     x.textAlign="center";
     x.fillStyle="#ec3a5c"; fit(t("card_brand"),W-160,"700",30); x.fillText(t("card_brand"), W/2, 76);
     // 아이돌 원형 사진 (로컬/커스텀만 — 원격 URL은 canvas 오염 방지로 생략)
-    const canUse = r.img && (r.img.startsWith('assets/') || r.img.startsWith('data:'));
-    const face = canUse ? await loadImg(r.img) : null;
+    const cis = cardImgSrc(r.img);
+    const face = cis.src ? await loadImg(cis.src, cis.cross) : null;
     const CY=232, R=96;
     if(face){
       x.save(); x.beginPath(); x.arc(W/2,CY,R,0,7); x.closePath(); x.clip();
@@ -1369,11 +1382,11 @@ const Game = {
     // 엔딩 이모지
     x.fillStyle="#2b2530"; x.font="60px 'Apple Color Emoji','Noto Color Emoji',sans-serif"; x.fillText(r.emoji, W/2, 536);
     // 엔딩명 (긴 엔딩명 자동 축소)
-    x.fillStyle="#ec3a5c"; fit(r.ending,W-140,"800",46); x.fillText(r.ending, W/2, 600);
+    x.fillStyle="#ec3a5c"; fit(r.ending,W-140,"800",46); x.fillText(r.ending, W/2, 590);
     // 타고난 재능
-    x.fillStyle="#9a8f9a"; fit(t("card_talent",{spec:t("st_"+r.spec)}),W-160,"600",28); x.fillText(t("card_talent",{spec:t("st_"+r.spec)}), W/2, 644);
-    // radar
-    drawRadarCtx(x, W/2, 862, 182, r.statVals, {dark:false, big:true});
+    x.fillStyle="#9a8f9a"; fit(t("card_talent",{spec:t("st_"+r.spec)}),W-160,"600",28); x.fillText(t("card_talent",{spec:t("st_"+r.spec)}), W/2, 632);
+    // radar — 아래로 내리고 축소해 상단 꼭짓점 라벨이 위 텍스트와 안 겹치게
+    drawRadarCtx(x, W/2, 884, 164, r.statVals, {dark:false, big:true});
     // 하단 바 (흰 카드)
     x.fillStyle="#ffffff"; x.strokeStyle="#ffd9de"; x.lineWidth=2.5;
     roundRect(x,80,1132,W-160,148,24); x.fill(); x.stroke();
@@ -1504,6 +1517,16 @@ const Game = {
   openSheet(html){ const s=document.getElementById("sheet");
     document.getElementById("sheetCard").innerHTML=html; s.classList.add("on"); },
   closeSheet(){ document.getElementById("sheet").classList.remove("on"); },
+  toggleSfx(){ localStorage.setItem("idol_sfx", sfxOn()?"off":"on"); if(sfxOn()) sfx("click"); this.openMenu(); },
+  // 결과화면 나가기 가드: 저장/공유 안 했는데 나가면 결과 유실 → 확인 시트
+  confirmReset(){
+    this.openSheet(`
+      <div class="sheet-title">${t("leave_title")}</div>
+      <div class="sheet-sub">${t("leave_sub")}</div>
+      <button class="sheet-btn primary" onclick="Game.closeSheet();Game.shareCard()">${t("leave_save")}</button>
+      <button class="sheet-btn danger" onclick="Game.closeSheet();Game.reset()">${t("leave_go")}</button>
+      <button class="sheet-btn plain" onclick="Game.closeSheet()">${t("exit_cancel")}</button>`);
+  },
   openMenu(){
     const langs=(typeof langList==="function"?langList():[{code:"ko",name:"한국어"},{code:"en",name:"EN"}]);
     const langBtns=langs.map(l=>`<button class="${l.code===window.LANG?"sel":""}" onclick="Game.changeLang('${l.code}');Game.openMenu()">${l.name}</button>`).join("");
@@ -1511,6 +1534,7 @@ const Game = {
       <div class="sheet-title">${t("menu_title")}</div>
       <div class="sheet-sub">${t("menu_settings")} · ${t("menu_lang")}</div>
       <div class="sheet-lang">${langBtns}</div>
+      <button class="sheet-btn plain" onclick="Game.toggleSfx()">${sfxOn()?t("sfx_on"):t("sfx_off")}</button>
       <button class="sheet-btn primary" onclick="Game.saveFromMenu()">${t("menu_save")}</button>
       <button class="sheet-btn danger" onclick="Game.confirmExit()">${t("menu_quit")}</button>
       <button class="sheet-btn plain" onclick="Game.closeSheet()">${t("exit_cancel")}</button>`);
@@ -1620,8 +1644,23 @@ function show(id){document.querySelectorAll(".screen").forEach(s=>s.classList.re
 function fmt(n){return Math.round(n||0).toLocaleString("en-US");}
 function clampState(s){ s.cond=Math.max(0,Math.min(100,s.cond)); s.mental=Math.max(0,s.mental);
   s.fans=Math.max(0,Math.round(s.fans)); STATS.forEach(st=>s[st.k]=Math.max(0,Math.round(s[st.k]))); }
-function loadImg(src){ return new Promise(res=>{ if(!src){res(null);return;}
-  const i=new Image(); i.onload=()=>res(i); i.onerror=()=>res(null); i.src=src; }); }
+function loadImg(src, cross){ return new Promise(res=>{ if(!src){res(null);return;}
+  const i=new Image(); if(cross) i.crossOrigin="anonymous";
+  i.onload=()=>res(i); i.onerror=()=>res(null); i.src=src; }); }
+// 원격 사진(gcdn 등)은 CORS 미개방 → 이미지 프록시 경유로 canvas 오염 없이 로드(실사진 카드용)
+function cardImgSrc(url){
+  if(!url) return {src:null,cross:false};
+  if(url.startsWith('assets/')||url.startsWith('data:')) return {src:url,cross:false};
+  if(/^https?:/.test(url)) return {src:"https://images.weserv.nl/?url="+encodeURIComponent(url.replace(/^https?:\/\//,''))+"&w=240&h=240&fit=cover&output=png", cross:true};
+  return {src:null,cross:false};
+}
+// ── 효과음 (Kenney interface-sounds, CC0 · m4a=iOS 사파리 호환) ──
+const SFX={}, SFX_KEYS=['click','great','ok','fail','dbad','perfect','win','rest'];
+function initSfx(){ SFX_KEYS.forEach(k=>{ try{ const a=new Audio(`assets/sfx/${k}.m4a`); a.preload="auto"; a.volume=0.45; SFX[k]=a; }catch(e){} }); }
+function sfxOn(){ return localStorage.getItem("idol_sfx")!=="off"; }   // 기본 켜짐
+function sfx(k){ if(!sfxOn())return; const a=SFX[k]; if(!a)return;
+  try{ a.currentTime=0; const p=a.play(); if(p&&p.catch) p.catch(()=>{}); }catch(e){} }
+initSfx();
 function countUp(el, from, to, dur){
   const t0=performance.now();
   const step=(t)=>{ const p=Math.min(1,(t-t0)/dur);
