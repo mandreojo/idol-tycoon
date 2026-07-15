@@ -1959,7 +1959,9 @@ const Game = {
     const rc=document.getElementById("radar").getContext("2d");
     rc.clearRect(0,0,580,580);
     ["shareLinkBtn","shareBtn","nameInput","saveBtn"].forEach(id=>{const e=document.getElementById(id);if(e)e.style.display="none";});
-    document.getElementById("againBtn").textContent=t("home_btn");
+    const abtn=document.getElementById("againBtn");
+    abtn.textContent=t("home_btn");
+    abtn.onclick=()=>Game.reset();   // 명전은 결과가 아니라 랭킹 뷰 → 이탈 경고 없이 바로 홈으로(결과화면의 confirmReset 가드 덮어씀)
     this.lastResult=null; this._boardCache=null; this.loadBoard(null); show("s-end");
   },
   reset(){
