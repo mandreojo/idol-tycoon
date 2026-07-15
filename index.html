@@ -560,7 +560,7 @@
 </div>
 
 <!-- 콘텐츠(다국어·아이돌DB) 갱신 시 v= 날짜를 올려 캐시 무효화 → 재방문 유저에게도 반영 -->
-<script src="i18n.js?v=20260715l"></script>
+<script src="i18n.js?v=20260715m"></script>
 <script src="idols.js?v=20260715d"></script>
 <script>
 // 검색용 아이돌: idols.js의 window.IDOL_DB (최애돌 실데이터 상위 250명). 로드 실패 시 빈 배열.
@@ -613,6 +613,14 @@ const REST = {k:"rest", ico:"😴", t:"휴식", d:"컨디션 회복 + 멘탈 ↑
 // 에셋 캐시버스터: 애니/스프라이트 갱신이 브라우저·Pages 하드캐시에 막혀 구버전 표시되던 문제 방지.
 // 애니 바꿀 때마다 이 값 갱신(날짜+접미).
 const ASSET_VER = "20260715l";
+// ===== Firebase (Firestore REST) — 서버 공유 리더보드. apiKey는 브라우저용 공개키(시크릿 아님), 실보안은 Security Rules =====
+const FB_PID="idol-tycoon", FB_KEY="AIzaSyCUgSzgS2DBf58G6-lHzO77Qn0ZkZglAeE";
+const FS_BASE=`https://firestore.googleapis.com/v1/projects/${FB_PID}/databases/(default)/documents`;
+function fsStr(v){ return {stringValue:String(v==null?"":v)}; }
+function fsParse(doc){ const f=doc.fields||{};
+  const g=k=>{ const c=f[k]; if(!c) return ""; return c.stringValue!=null?c.stringValue:(c.integerValue!=null?+c.integerValue:(c.doubleValue!=null?+c.doubleValue:"")); };
+  return {player:g("player"),name:g("name"),ending:g("ending"),emoji:g("emoji"),fans:+g("fans")||0,lang:g("lang")};
+}
 // 훈련 도트 연출: 활동별 동작(영차영차) + 결과별 마무리
 const TRAIN_FX = {
   vocal:   {motion:"fx-sing",   notes:["♪","♫","🎵"], word:"노래 연습 중"},
@@ -1638,7 +1646,7 @@ const Game = {
       const ni2=document.getElementById("nameInput"); if(ni2) ni2.disabled=false;
       document.getElementById("againBtn").textContent=t("again_btn");
       document.getElementById("againBtn").onclick=()=>Game.confirmReset();
-      this.renderBoard(null);
+      this._boardCache=null; this.loadBoard(null);   // 서버 리더보드 조회
       this.prepCard();   // 카드 미리 생성 (저장 버튼 제스처 소진 방지)
     }
     document.getElementById("endStage").textContent=
@@ -1810,13 +1818,37 @@ const Game = {
     },"image/png");
   },
 
-  board(){ try{return JSON.parse(localStorage.getItem("idol_lb")||"[]");}catch(e){return[];} },
-  renderBoard(hl){
-    const list=this.board().slice().sort((a,b)=>b.fans-a.fans).slice(0,10);
+  // ===== 리더보드 (Firestore REST — 서버 공유. 오프라인이면 로컬 폴백) =====
+  localBoard(){ try{return JSON.parse(localStorage.getItem("idol_lb")||"[]");}catch(e){return[];} },
+  // 서버에서 상위 20 가져와 캐시. 실패 시 로컬 폴백.
+  async fetchBoard(){
+    try{
+      const body={structuredQuery:{from:[{collectionId:"leaderboard"}],
+        orderBy:[{field:{fieldPath:"fans"},direction:"DESCENDING"}], limit:20}};
+      const res=await fetch(`${FS_BASE}:runQuery?key=${FB_KEY}`,
+        {method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(body)});
+      if(!res.ok) throw new Error("http "+res.status);
+      const arr=await res.json();
+      this._boardCache=(arr||[]).filter(x=>x.document).map(x=>fsParse(x.document));
+      this._boardServer=true;
+    }catch(e){ this._boardServer=false; this._boardCache=this.localBoard(); }
+    return this._boardCache;
+  },
+  // 로딩 표시 → 서버 조회 → 렌더
+  loadBoard(hl){
     const box=document.getElementById("lbBox");
+    if(box && !this._boardCache) box.innerHTML=`<div class="lb-row"><span class="who muted">${t("hall_loading")}</span></div>`;
+    this.fetchBoard().then(()=>this.renderBoard(hl));
+  },
+  renderBoard(hl){
+    const src=this._boardCache || this.localBoard();
+    const list=src.slice().sort((a,b)=>b.fans-a.fans).slice(0,10);
+    const box=document.getElementById("lbBox");
+    if(!box) return;
     if(!list.length){box.innerHTML=`<div class="lb-row"><span class="who muted">${t("hall_empty")}</span></div>`;return;}
+    const meName=this.lastResult&&this.lastResult.name;
     box.innerHTML=list.map((r,i)=>{
-      const me=hl!=null && r.fans===hl && r._me;
+      const me=hl!=null && r.fans===hl && (r._me || r.name===meName);
       const medal=["🥇","🥈","🥉"][i]||`${i+1}`;
       return `<div class="lb-row ${me?"me":""}"><span class="r">${medal}</span>
         <span class="who">${r.emoji||"⭐"} ${esc(r.player||t("hall_anon"))}
@@ -1829,19 +1861,29 @@ const Game = {
     if(btn){ btn.textContent=t("save_done"); btn.disabled=true; btn.classList.add("saved-done"); }
     const ni=document.getElementById("nameInput"); if(ni) ni.disabled=true;
   },
-  saveScore(){
+  async saveScore(){
     if(!this.lastResult) return;
     if(this.lastResult._saved){toast(t("toast_hall_dup"));this._markSaved();return;}
+    const r=this.lastResult;
     const player=(document.getElementById("nameInput").value||t("hall_anon")).slice(0,10);
-    const lb=this.board();
-    lb.forEach(r=>r._me=false);
-    lb.push({player,name:this.lastResult.name,ending:this.lastResult.ending,
-      emoji:this.lastResult.emoji,fans:this.lastResult.fans,_me:true});
-    localStorage.setItem("idol_lb", JSON.stringify(lb.slice(-200)));
-    this.lastResult._saved=true;
-    this.renderBoard(this.lastResult.fans);
-    toast(t("toast_hall_saved"));
-    this._markSaved();
+    const fans=Math.max(0,Math.min(5000000,Math.round(r.fans)));   // 서버 규칙 상한과 일치
+    r._saved=true; this._markSaved();   // 중복 등록 방지 (낙관적)
+    let ok=false;
+    try{
+      const body={fields:{player:fsStr(player),name:fsStr(r.name),ending:fsStr(r.ending),
+        emoji:fsStr(r.emoji||"⭐"),fans:{integerValue:String(fans)},lang:fsStr(window.LANG||"ko")}};
+      const res=await fetch(`${FS_BASE}/leaderboard?key=${FB_KEY}`,
+        {method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(body)});
+      ok=res.ok;
+    }catch(e){ ok=false; }
+    if(ok){ toast(t("toast_hall_saved")); await this.fetchBoard(); this.renderBoard(r.fans); }
+    else {  // 오프라인/실패 → 이 기기에만 저장
+      const lb=this.localBoard(); lb.forEach(x=>x._me=false);
+      lb.push({player,name:r.name,ending:r.ending,emoji:r.emoji,fans,_me:true});
+      localStorage.setItem("idol_lb", JSON.stringify(lb.slice(-200)));
+      this._boardServer=false; this._boardCache=lb;
+      toast(t("toast_hall_local")); this.renderBoard(r.fans);
+    }
   },
   showBoard(){
     document.getElementById("endStage").textContent=t("hall_title");
@@ -1855,7 +1897,7 @@ const Game = {
     rc.clearRect(0,0,580,580);
     ["shareLinkBtn","shareBtn","nameInput","saveBtn"].forEach(id=>{const e=document.getElementById(id);if(e)e.style.display="none";});
     document.getElementById("againBtn").textContent=t("home_btn");
-    this.lastResult=null; this.renderBoard(null); show("s-end");
+    this.lastResult=null; this._boardCache=null; this.loadBoard(null); show("s-end");
   },
   reset(){
     ["shareLinkBtn","shareBtn","nameInput","saveBtn"].forEach(id=>{const e=document.getElementById(id);if(e)e.style.display="";});
