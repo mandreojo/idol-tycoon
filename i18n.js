@@ -37,6 +37,7 @@ window.I18N = {
     // 스탯
     st_vocal:"보컬", st_dance:"댄스", st_visual:"비주얼", st_charm:"끼",
     st_acting:"연기", st_creative:"크리에이티브", st_mental:"멘탈",
+    st_creative_short:"작곡", radar_grade:"{g} 등급",
     // 훈련
     tr_vocal_t:"보컬 레슨", tr_vocal_d:"발성·음정",
     tr_dance_t:"댄스 연습", tr_dance_d:"안무·체력",
@@ -300,6 +301,7 @@ window.I18N = {
     act_world:"Road to World",
     st_vocal:"Vocal", st_dance:"Dance", st_visual:"Visual", st_charm:"Charm",
     st_acting:"Acting", st_creative:"Creative", st_mental:"Mental",
+    st_creative_short:"Compose", radar_grade:"Grade {g}",
     tr_vocal_t:"Vocal Lesson", tr_vocal_d:"pitch & tone",
     tr_dance_t:"Dance Practice", tr_dance_d:"choreo & stamina",
     tr_visual_t:"Visual Care", tr_visual_d:"styling",

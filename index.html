@@ -545,7 +545,7 @@
 </div>
 
 <!-- 콘텐츠(다국어·아이돌DB) 갱신 시 v= 날짜를 올려 캐시 무효화 → 재방문 유저에게도 반영 -->
-<script src="i18n.js?v=20260715h"></script>
+<script src="i18n.js?v=20260715i"></script>
 <script src="idols.js?v=20260715d"></script>
 <script>
 // 검색용 아이돌: idols.js의 window.IDOL_DB (최애돌 실데이터 상위 250명). 로드 실패 시 빈 배열.
@@ -923,7 +923,7 @@ const Game = {
     let list = q ? IDOLS.filter(i=> (i.name||"").toLowerCase().includes(q) || (i.grp||"").toLowerCase().includes(q) || (i.en||"").includes(q)) : IDOLS;
     list = list.slice(0,60);
     const grid=document.getElementById("idolGrid");
-    if(!list.length){ grid.innerHTML=`<p class="muted" style="grid-column:1/-1;text-align:center;padding:24px">검색 결과가 없어. 다른 이름으로 찾아봐.</p>`; return; }
+    if(!list.length){ grid.innerHTML=`<p class="muted" style="grid-column:1/-1;text-align:center;padding:24px">${t("sel_no_result")}</p>`; return; }
     grid.innerHTML = list.map(i=>{
       return `<div class="card" data-id="${i.id}" onclick="Game.pick(${i.id})">
         <span class="ph" style="background-image:url('${i.img}')"></span>
@@ -939,7 +939,7 @@ const Game = {
   renderSpecPick(){
     document.getElementById("specPick").innerHTML = STATS.map(s=>
       `<button class="sp" data-k="${s.k}" onclick="Game.pickSpec('${s.k}')">
-        <span class="spico">${s.ico}</span>${s.n}</button>`).join("");
+        <span class="spico">${s.ico}</span>${t("st_"+s.k)}</button>`).join("");
   },
   pickSpec(k){
     this.customSpec=k;
@@ -1549,7 +1549,8 @@ const Game = {
     const end=this.ending(reachedWorld, finalRank);
     const dexNew=shared ? false : this.dexAdd(dexIdOf(end));   // 엔딩 도감 기록 (첫 달성이면 true)
     if(!shared && end.tier==="SS") this.logPrestige(s, statTotal, finalRank);  // 프레스티지 배출 로깅(실측·조임용)
-    const statVals=STATS.map(st=>({n:st.n,k:st.k,c:st.c,v:Math.round(s[st.k]),g:grade(Math.round(s[st.k]))}));
+    // 레이더 라벨은 짧은 형(작곡 등 긴 라벨 캔버스 밖 잘림 방지). creative만 별도 단축키.
+    const statVals=STATS.map(st=>({n:t(st.k==="creative"?"st_creative_short":"st_"+st.k),k:st.k,c:st.c,v:Math.round(s[st.k]),g:grade(Math.round(s[st.k]))}));
     const overall=grade(Math.round(statTotal/STATS.length));
     const spStat=STATS.find(x=>x.k===s.idol.spec)||STATS[0];
     this.lastResult={name:idolName(s.idol),grp:idolGrp(s.idol),ending:end.name,emoji:end.emoji,
@@ -1936,10 +1937,11 @@ function drawRadarCtx(x, cx, cy, R, vals, opts){
     x.beginPath(); x.arc(px,py,big?6:4,0,7); x.fillStyle=vals[i].c; x.fill();
     const lr=R+(big?52:26), lx=cx+Math.cos(ang(i))*lr, ly=cy+Math.sin(ang(i))*lr;
     x.textAlign = Math.abs(Math.cos(ang(i)))<0.3 ? "center" : (Math.cos(ang(i))>0?"left":"right");
-    x.fillStyle=dark?"#d9d2f0":"#333"; x.font=lf+" 'Apple SD Gothic Neo',sans-serif";
+    const cjk="'Apple SD Gothic Neo','Hiragino Sans','PingFang SC','PingFang TC','Noto Sans CJK',sans-serif";
+    x.fillStyle=dark?"#d9d2f0":"#333"; x.font=lf+" "+cjk;
     x.fillText(vals[i].n, lx, ly-(big?6:3));
-    x.fillStyle=vals[i].c; x.font=gf+" 'Apple SD Gothic Neo',sans-serif";
-    x.fillText(vals[i].g+" 등급", lx, ly+(big?26:12));
+    x.fillStyle=vals[i].c; x.font=gf+" "+cjk;
+    x.fillText(t("radar_grade",{g:vals[i].g}), lx, ly+(big?26:12));
   }
   x.textAlign="left";
 }
