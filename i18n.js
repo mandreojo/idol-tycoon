@@ -119,6 +119,7 @@ window.I18N = {
     toast_link_copied:"링크를 복사했어! 📋 붙여넣기 해줘",
     name_ph:"이름을 남겨봐 (리더보드)",
     save_btn:"🏆 명예의 전당 등록",
+    save_done:"✅ 등록 완료!",
     home_btn:"홈으로", again_btn:"다시 하기",
     start_log:"<b>{name}</b> 데뷔 프로젝트 시작 — 함께 월드스타를 향해!",
     // 엔딩 종류
@@ -314,6 +315,7 @@ window.I18N = {
     toast_link_copied:"Link copied! 📋 Paste it anywhere",
     name_ph:"Leave your name (leaderboard)",
     save_btn:"🏆 Register to Hall of Fame",
+    save_done:"✅ Registered!",
     home_btn:"Home", again_btn:"Play Again",
     start_log:"<b>{name}</b>'s debut project begins — to the world, together!",
     e_disband_n:"Group Disbanded", e_disband_s:"Couldn't break the domestic wall and disbanded… next time for sure.",
