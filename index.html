@@ -545,7 +545,7 @@
 </div>
 
 <!-- 콘텐츠(다국어·아이돌DB) 갱신 시 v= 날짜를 올려 캐시 무효화 → 재방문 유저에게도 반영 -->
-<script src="i18n.js?v=20260715f"></script>
+<script src="i18n.js?v=20260715g"></script>
 <script src="idols.js?v=20260715d"></script>
 <script>
 // 검색용 아이돌: idols.js의 window.IDOL_DB (최애돌 실데이터 상위 250명). 로드 실패 시 빈 배열.
@@ -753,6 +753,84 @@ const EVENTS = [
    choices:[
      {t:"강행군 (비주얼·끼 +14, 컨디션 -16, 팬 ↑↑)", fx:s=>{s.visual+=14;s.charm+=14;s.cond-=16;s.fans+=1400;}},
      {t:"국내 집중 (팬 +안정)", fx:s=>{s.fans+=600;}},
+   ]},
+  // ── 신규 분기형 (도전·리스크) ──
+  {id:"mv", emoji:"🎥", title:"뮤직비디오 파격 티저", text:"이번 MV 콘티가 파격적이야. 비주얼·컨셉 승부수를 던질까?",
+   choices:[
+     {t:"파격 컨셉으로 올인", odds:s=>0.38+s.visual/1400+s.creative/2000,
+       win:{label:"티저 조회수 폭발!",emoji:"🎬",desc:"비주얼 <b>+30</b> · 크리에이티브 <b>+16</b> · 팬 <b>↑↑</b>",
+            fx:s=>{s.visual+=30;s.creative+=16;s.fans+=Math.round(2000+s.visual*4);s.cond-=8;}},
+       lose:{label:"과했다 혹평",emoji:"🫠",desc:"멘탈 <b>-12</b> · 팬 <b>↓</b>",
+            fx:s=>{s.mental-=12;s.fans=Math.round(s.fans*0.9);}}},
+     {t:"무난한 컨셉 (비주얼 +12)", fx:s=>{s.visual+=12;}},
+   ]},
+  {id:"collab", emoji:"🎧", title:"해외 아티스트 콜라보", text:"글로벌 아티스트가 피처링을 제안했어. 언어·톤이 관건이야.",
+   choices:[
+     {t:"콜라보 도전", odds:s=>0.34+s.vocal/1300+s.creative/1600,
+       win:{label:"글로벌 차트인!",emoji:"🌍",desc:"보컬 <b>+24</b> · 크리에이티브 <b>+20</b> · 팬 <b>대폭↑↑</b>",
+            fx:s=>{s.vocal+=24;s.creative+=20;s.fans+=Math.round(2800);s.cond-=10;}},
+       lose:{label:"톤 안 맞아 묻힘",emoji:"😵‍💫",desc:"멘탈 <b>-13</b> · 팬 <b>↓</b>",
+            fx:s=>{s.mental-=13;s.fans=Math.round(s.fans*0.92);}}},
+     {t:"국내 활동 집중 (보컬 +13)", fx:s=>{s.vocal+=13;}},
+   ]},
+  {id:"vlog", emoji:"📱", title:"브이로그 채널 오픈", text:"자컨으로 팬들과 더 가까이. 근데 사생활 노출이 부담돼.",
+   choices:[
+     {t:"일상 다 공개", odds:s=>0.42+s.charm/1300+s.mental/500,
+       win:{label:"입덕 유발 자컨!",emoji:"🥰",desc:"끼 <b>+26</b> · 팬 <b>↑↑</b>",
+            fx:s=>{s.charm+=26;s.fans+=Math.round(1700+s.charm*4);}},
+       lose:{label:"과공개 역풍",emoji:"🫥",desc:"멘탈 <b>-14</b> · 팬 <b>↓</b>",
+            fx:s=>{s.mental-=14;s.fans=Math.round(s.fans*0.9);}}},
+     {t:"적당히 편집 (끼 +11)", fx:s=>{s.charm+=11;}},
+   ]},
+  {id:"dancebattle", emoji:"🕺", title:"댄스 배틀 프로그램", text:"실력파 댄서들과 맞붙는 배틀 무대. 이기면 각인, 지면 굳은 몸 굴욕.",
+   choices:[
+     {t:"배틀 참가", odds:s=>0.32+s.dance/1200+s.cond/500,
+       win:{label:"무대 씹어먹음!",emoji:"🔥",desc:"댄스 <b>+34</b> · 팬 <b>대폭↑↑</b>",
+            fx:s=>{s.dance+=34;s.fans+=Math.round(2400+s.dance*4);s.cond-=10;}},
+       lose:{label:"버벅임 밈화",emoji:"🥶",desc:"댄스 <b>+6</b> · 멘탈 <b>-12</b> · 팬 <b>↓</b>",
+            fx:s=>{s.dance+=6;s.mental-=12;s.fans=Math.round(s.fans*0.92);}}},
+     {t:"연습으로 대비 (댄스 +14)", fx:s=>{s.dance+=14;}},
+   ]},
+  {id:"busk", emoji:"🎸", title:"게릴라 버스킹", text:"깜짝 길거리 라이브. 입소문 나면 대박, 썰렁하면 흑역사.",
+   choices:[
+     {t:"광장에서 즉흥 무대", odds:s=>0.40+s.vocal/1500+s.charm/1500,
+       win:{label:"직캠 역주행!",emoji:"🎤",desc:"보컬 <b>+20</b> · 끼 <b>+20</b> · 팬 <b>↑↑</b>",
+            fx:s=>{s.vocal+=20;s.charm+=20;s.fans+=Math.round(1900);s.cond-=6;}},
+       lose:{label:"소음신고·썰렁",emoji:"🚓",desc:"멘탈 <b>-10</b> · 팬 <b>↓</b>",
+            fx:s=>{s.mental-=10;s.fans=Math.round(s.fans*0.94);}}},
+     {t:"실내 소극장으로 안전하게 (보컬 +12)", fx:s=>{s.vocal+=12;}},
+   ]},
+  // ── 신규 1회성(once) 특별 이벤트 ──
+  {id:"documentary", emoji:"🎞️", once:true, weight:0.7, title:"데뷔 다큐 제작", text:"연습생 시절부터의 서사를 담은 다큐 제안. 팬덤 결속의 기회야.",
+   choices:[
+     {t:"진심을 담아 공개 (팬 대폭 ↑↑, 멘탈 +8)", fx:s=>{s.fans+=Math.round(2600+s.fans*0.05);s.mental=Math.min(100,s.mental+8);}},
+   ]},
+  {id:"photobook", emoji:"📸", once:true, weight:0.7, title:"첫 화보집 발매", text:"데뷔 첫 화보집. 콘셉트를 세게 잡으면 소장각, 어설프면 재고각.",
+   choices:[
+     {t:"아트 화보로 승부", odds:s=>0.44+s.visual/1200,
+       win:{label:"완판 화보!",emoji:"💎",desc:"비주얼 <b>+30</b> · 팬 <b>↑↑↑</b>",
+            fx:s=>{s.visual+=30;s.fans+=Math.round(2500);}},
+       lose:{label:"콘셉트 미스",emoji:"😶‍🌫️",desc:"비주얼 <b>+8</b> · 팬 <b>↓</b>",
+            fx:s=>{s.visual+=8;s.fans=Math.round(s.fans*0.93);}}},
+     {t:"자연스러운 데일리 화보 (비주얼 +14)", fx:s=>{s.visual+=14;}},
+   ]},
+  {id:"charity", emoji:"💝", once:true, weight:0.7, title:"선한 영향력", text:"수익 일부를 기부하고 선행에 동참할까? 이미지에 큰 자산이 돼.",
+   choices:[
+     {t:"기부·봉사 동참 (멘탈 +10, 팬 ↑)", fx:s=>{s.mental=Math.min(100,s.mental+10);s.fans+=Math.round(1200+s.fans*0.03);}},
+   ]},
+  // ── 신규 확정형(트레이드오프·회복) ──
+  {id:"radio", emoji:"📻", title:"라디오 고정 게스트", text:"편한 라디오 코너에 고정 출연. 부담 없이 소통하며 재정비.",
+   choices:[
+     {t:"수다 떨며 힐링 (멘탈 +8, 팬 +소폭)", fx:s=>{s.mental=Math.min(100,s.mental+8);s.fans+=600;}},
+   ]},
+  {id:"diet", emoji:"🥗", title:"컴백 전 관리 모드", text:"컴백을 앞두고 몸 관리에 들어갈 시간.",
+   choices:[
+     {t:"빡세게 관리 (비주얼 +18, 컨디션 -12)", fx:s=>{s.visual+=18;s.cond-=12;}},
+     {t:"균형 있게 (비주얼 +8, 컨디션 +8)", fx:s=>{s.visual+=8;s.cond=Math.min(100,s.cond+8);}},
+   ]},
+  {id:"mentor", emoji:"🧑‍🏫", title:"선배의 조언", text:"업계 선배가 밥 사주며 진심 어린 조언을 해줬어.",
+   choices:[
+     {t:"새겨듣는다 (모든 스탯 +6, 멘탈 +6)", fx:s=>{STATS.forEach(x=>s[x.k]+=6);s.mental=Math.min(100,s.mental+6);}},
    ]},
   // ── 성별 이벤트 (아이돌 cat=F/M에 따라만 등장) ──
   {id:"concept_f", gender:"F", emoji:"💃", title:"컨셉 회의: 청순 vs 걸크러시", text:"다음 컴백 컨셉을 정한다. 파격 변신은 화제성 폭발이지만 기존 팬 반응은 갈려.",
@@ -1155,9 +1233,16 @@ const Game = {
 
   showEvent(done){
     const s=this.st;
-    // 성별 게이팅: gender 없는 공용 + 아이돌 성별(cat M/F) 일치 이벤트만 후보. 매 게임 성별 맞춤 경험.
-    const pool=EVENTS.filter(e=> !e.gender || e.gender===(s.idol.cat||"F"));
-    const ev=pool[Math.floor(Math.random()*pool.length)];
+    if(!s.usedEvents) s.usedEvents=[];
+    // 성별 게이팅 + once(1회성) 소진 제외. 후보 없으면 once 무시하고 재사용.
+    const okGender=e=> !e.gender || e.gender===(s.idol.cat||"F");
+    let pool=EVENTS.filter(e=> okGender(e) && !(e.once && s.usedEvents.includes(e.id)));
+    if(!pool.length) pool=EVENTS.filter(okGender);
+    // 가중치 랜덤(weight 기본 1, once는 살짝 낮춰 특별하게)
+    const wsum=pool.reduce((a,e)=>a+(e.weight||1),0);
+    let r=Math.random()*wsum, ev=pool[0];
+    for(const e of pool){ r-=(e.weight||1); if(r<=0){ ev=e; break; } }
+    if(ev.once && !s.usedEvents.includes(ev.id)) s.usedEvents.push(ev.id);
     const ov=document.getElementById("ov");
     ov.className="ov on";
     const eid=ev.id;
