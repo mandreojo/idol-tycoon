@@ -172,6 +172,8 @@
     border-radius:13px;padding:11px 12px;cursor:pointer;transition:transform .08s,border-color .1s;text-align:left;width:100%}
   .act:active{transform:scale(.97)}
   .act.rest{background:var(--panel2)}
+  .act.care{background:#fff0f5;border-color:#ffcfe0}
+  .act.care .ico{filter:drop-shadow(0 1px 2px rgba(236,58,92,.3))}
   .act .ico{font-size:20px;width:22px;text-align:center;flex:none}
   .act .body{flex:1;min-width:0}
   .act .t{font-weight:700;font-size:14px}
@@ -560,7 +562,7 @@
 </div>
 
 <!-- 콘텐츠(다국어·아이돌DB) 갱신 시 v= 날짜를 올려 캐시 무효화 → 재방문 유저에게도 반영 -->
-<script src="i18n.js?v=20260715m"></script>
+<script src="i18n.js?v=20260715n"></script>
 <script src="idols.js?v=20260715d"></script>
 <script>
 // 검색용 아이돌: idols.js의 window.IDOL_DB (최애돌 실데이터 상위 250명). 로드 실패 시 빈 배열.
@@ -651,8 +653,10 @@ const RESULT_FX = {
 const PERF = { condMin:78, pMax:0.16, mult:4.6 };
 function rollJudge(cond, mental){
   let pGreat = Math.max(0, 0.03 + cond*0.0035);            // 0:0.03  50:0.205  100:0.38
-  let pDbad  = Math.max(0.02, 0.44 - cond*0.0052 - mental/1400); // 0:~0.41 50:~0.15 100:~0.02
-  let pFail  = Math.max(0.05, 0.34 - cond*0.0022 - mental/1600);
+  // 저멘탈 임계 페널티: 멘탈 MENTAL_THRESH 미만부터 대실패·실패 급증(그 이상은 페널티 0). 멘탈을 관리 자원화.
+  const lowM = Math.max(0, MENTAL_THRESH - mental);
+  let pDbad  = Math.max(0.02, 0.44 - cond*0.0052 + lowM*0.008);
+  let pFail  = Math.max(0.05, 0.34 - cond*0.0022 + lowM*0.004);
   const r = Math.random();
   if(r < pDbad) return "dbad";
   if(r < pDbad + pFail) return "fail";
@@ -670,6 +674,11 @@ const JUDGE = {
   great:{cls:"dg",jk:"great",emoji:"🔥", mult:2.1,  cond:-4,  fanMult:2.3},
   perfect:{cls:"pf",jk:"perfect",emoji:"🌟", mult:PERF.mult, cond:-2, fanMult:3.2},
 };
+// 멘탈 밸런스(sim.js 8000판 확정): 판정 결과가 멘탈에 피드백(비대칭 — 실패 크게, 성공 소폭).
+// 저멘탈(<THRESH)이면 대실패·실패 급증. 자동회복 없음(주차 0)·휴식은 멘탈 소폭만 → 멘탈은 케어 액션으로 관리.
+const MENTAL_THRESH = 56;
+const MENTAL_DELTA = {dbad:-9, fail:-3, ok:0, great:2, perfect:4};
+const CARE = {k:"care", ico:"💗", mentalGain:54, condGain:3};
 
 // 성장곡선(등급별 계단식 우하향): 낮은 등급 쭉쭉(도파민) → 높은 등급 뻑뻑.
 // level 0~7 = F E D C B A S SS. 등급 오를수록 같은 훈련이 덜 오름.
@@ -1106,26 +1115,40 @@ const Game = {
           <span class="ico">${tr.ico}</span>
           <span class="body"><span class="t">${t("tr_"+tr.k+"_t")}</span><span class="d">${t("tr_"+tr.k+"_d")}</span></span>
         </button>`).join("")}</div>
-      <button class="act rest" onclick="Game.train('rest')">
-        <span class="ico">${REST.ico}</span>
-        <span class="body"><span class="t">${t("tr_rest_t")}</span><span class="d">${t("tr_rest_d")}</span></span>
-      </button>`;
+      <div class="agrid">
+        <button class="act rest" onclick="Game.train('rest')">
+          <span class="ico">${REST.ico}</span>
+          <span class="body"><span class="t">${t("tr_rest_t")}</span><span class="d">${t("tr_rest_d")}</span></span>
+        </button>
+        <button class="act care" onclick="Game.train('care')">
+          <span class="ico">${CARE.ico}</span>
+          <span class="body"><span class="t">${t("tr_care_t")}</span><span class="d">${t("tr_care_d")}</span></span>
+        </button>
+      </div>`;
   },
 
   train(kind){
     const s=this.st; if(s.busy) return; s.busy=true;
-    sfx(kind==="rest"?"rest":"click");   // 훈련 시작음(첫 제스처가 모바일 오디오 unlock도 겸함)
+    sfx(kind==="rest"||kind==="care"?"rest":"click");   // 훈련 시작음(첫 제스처가 모바일 오디오 unlock도 겸함)
     if(kind==="rest"){
       const gain=26+Math.round(Math.random()*14);
-      s.cond=Math.min(100,s.cond+gain); s.mental=Math.min(100,s.mental+8);
+      s.cond=Math.min(100,s.cond+gain); s.mental=Math.min(100,s.mental+3);  // 휴식=컨디션 위주, 멘탈은 소폭만(디커플링)
       this.trainReveal(s.idol, "rest", "ok", {cls:"s",label:t("rest_label"),emoji:"😌"},
         t("rest_delta",{g:gain}), t("rest_say"),
         ()=>{ this.render(); this.afterTurn(); });
       return;
     }
+    if(kind==="care"){   // 멘탈 케어(힐링) — 멘탈 전용 회복. 멘탈이 관리 자원이 됨.
+      const mg=Math.min(100,s.mental+CARE.mentalGain)-s.mental;
+      s.mental=Math.min(100,s.mental+CARE.mentalGain); s.cond=Math.min(100,s.cond+CARE.condGain);
+      this.trainReveal(s.idol, "rest", "great", {cls:"dg",label:t("care_label"),emoji:"💗"},
+        t("care_delta",{m:mg,c:CARE.condGain}), t("care_say"),
+        ()=>{ this.render(); this.afterTurn(); });
+      return;
+    }
     const j=rollJudge(s.cond,s.mental), J=JUDGE[j];
     const stat=STATS.find(x=>x.k===kind);
-    const baseGain=19+Math.round(Math.random()*6);
+    const baseGain=22+Math.round(Math.random()*7);   // 케어 턴세 상쇄용 성장 보정(sim 확정)
     // 히든 특기 가점: 타고난 특기 훈련이 더 잘 자람 (준특기는 소폭). UI엔 안 보임.
     const keys=STATS.map(x=>x.k), si=keys.indexOf(s.idol.spec);
     const talent = kind===s.idol.spec ? 1.22 : (kind===keys[(si+3)%keys.length] ? 1.1 : 1.0);
@@ -1134,7 +1157,7 @@ const Game = {
     const oldV=Math.round(s[kind]), oldG=grade(oldV), oldL=levelOf(oldV);
     s[kind]=Math.max(0,s[kind]+gain);
     s.cond=Math.max(0,s.cond+J.cond);
-    if(j==="dbad") s.mental=Math.max(0,s.mental-6);
+    s.mental=Math.max(0,Math.min(100,s.mental+(MENTAL_DELTA[j]||0)));  // 판정 연동 멘탈(비대칭)
     const fanGain=Math.round((30+s[kind]*0.6)*J.fanMult);
     s.fans+=fanGain;
     const newV=Math.round(s[kind]), newG=grade(newV), newL=levelOf(newV);
@@ -1267,7 +1290,7 @@ const Game = {
   // 훈련 끝 → 다음 주로. (관문·이벤트는 '주 시작'에서 처리 — 훈련효과와 분리)
   afterTurn(){ this.nextWeek(); },
   nextWeek(){ this.st.week++; this.st.busy=false;
-    this.st.mental=Math.min(100,this.st.mental+3);  // 주차 자동 멘탈 회복(고꾸라져도 서서히 복구)
+    // 주차 자동 멘탈 회복 제거(sim 확정) — 멘탈은 케어 액션으로 능동 관리
     this.save(); this.startWeek(); },
   // 주 시작: 데뷔/관문이면 바로 진행, 아니면 확률로 이벤트 → 닫으면 그 주 훈련 선택
   startWeek(){
