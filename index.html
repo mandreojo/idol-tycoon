@@ -38,6 +38,8 @@
     background:var(--panel2);color:var(--txt);font-size:18px;line-height:1;cursor:pointer;
     display:flex;align-items:center;justify-content:center;transition:transform .08s}
   .menu-btn:active{transform:scale(.92)}
+  .sub-head{display:flex;align-items:center;gap:10px;margin-bottom:6px}
+  .sub-head h2{margin:0;font-size:20px}
   .sheet{position:absolute;inset:0;background:rgba(40,20,28,.42);backdrop-filter:blur(2px);
     display:none;flex-direction:column;justify-content:flex-end;z-index:35}
   .sheet.on{display:flex;animation:sheetFade .18s ease}
@@ -500,7 +502,10 @@
 
   <!-- SELECT -->
   <section class="screen" id="s-select">
-    <h2 data-i18n="sel_who">누구를 키울까?</h2>
+    <div class="sub-head">
+      <button class="menu-btn" onclick="Game.reset()" aria-label="back" title="뒤로">←</button>
+      <h2 data-i18n="sel_who">누구를 키울까?</h2>
+    </div>
     <div class="segtab">
       <button class="seg on" id="seg-search" onclick="Game.mode('search')" data-i18n="sel_tab_search">🔍 아이돌 검색</button>
       <button class="seg" id="seg-custom" onclick="Game.mode('custom')" data-i18n="sel_tab_custom">✏️ 커스텀</button>
@@ -656,7 +661,7 @@ const REST = {k:"rest", ico:"😴", t:"휴식", d:"컨디션 회복 + 멘탈 ↑
 
 // 에셋 캐시버스터: 애니/스프라이트 갱신이 브라우저·Pages 하드캐시에 막혀 구버전 표시되던 문제 방지.
 // 애니 바꿀 때마다 이 값 갱신(날짜+접미).
-const ASSET_VER = "20260715s";
+const ASSET_VER = "20260715t";
 // ===== Firebase (Firestore REST) — 서버 공유 리더보드. apiKey는 브라우저용 공개키(시크릿 아님), 실보안은 Security Rules =====
 const FB_PID="idol-tycoon", FB_KEY="AIzaSyCUgSzgS2DBf58G6-lHzO77Qn0ZkZglAeE";
 const FS_BASE=`https://firestore.googleapis.com/v1/projects/${FB_PID}/databases/(default)/documents`;
@@ -2154,7 +2159,9 @@ function roundRect(x,rx,ry,w,h,r){ x.beginPath();
   x.arcTo(rx,ry+h,rx,ry,r); x.arcTo(rx,ry,rx+w,ry,r); x.closePath(); }
 
 function show(id){document.querySelectorAll(".screen").forEach(s=>s.classList.remove("on"));
-  document.getElementById(id).classList.add("on"); document.getElementById("app").scrollTop=0;}
+  document.getElementById(id).classList.add("on"); document.getElementById("app").scrollTop=0;
+  // 폰 뒤로가기 가드: 서브화면(선택·도감·명전·결과) 진입 시 히스토리 확보 → popstate로 가로채 타이틀 복귀(게임 밖 이탈 방지). 플레이화면은 armBackGuard가 담당.
+  if(id==="s-select"||id==="s-dex"||id==="s-end"){ try{ history.pushState({scr:id},""); }catch(e){} }}
 function fmt(n){return Math.round(n||0).toLocaleString("en-US");}
 function clampState(s){ s.cond=Math.max(0,Math.min(100,s.cond)); s.mental=Math.max(0,Math.min(100,s.mental));  // 멘탈 100 캡(이벤트 초과 버그 수정)
   s.fans=Math.max(0,Math.round(s.fans)); STATS.forEach(st=>s[st.k]=Math.max(0,Math.min(800,Math.round(s[st.k])))); }  // 스탯 800 캡
@@ -2341,10 +2348,24 @@ if(!new URLSearchParams(location.search).get("r") && !localStorage.getItem("idol
 }
 // 뒤로가기 가드: 플레이 중이면 페이지를 떠나지 않고 나가기 확인 시트 노출
 window.addEventListener("popstate", ()=>{
+  const manualOn=document.getElementById("manual").classList.contains("on");
+  const sheetOn=document.getElementById("sheet").classList.contains("on");
   if(Game.inPlay()){
     Game.armBackGuard();   // 다시 state 쌓아 페이지에 머무름
-    if(document.getElementById("sheet").classList.contains("on")) Game.closeSheet();
-    else Game.confirmExit();
+    if(manualOn){ Game.closeManual(); return; }   // 도움말 열려있으면 그것부터 닫기
+    if(sheetOn){ Game.closeSheet(); return; }
+    Game.confirmExit();
+    return;
+  }
+  // 서브화면(선택·도감·명전·결과)에서 폰 뒤로가기 → 게임 밖 이탈 대신 타이틀로 복귀
+  const cur=["s-select","s-dex","s-end"].find(id=>document.getElementById(id).classList.contains("on"));
+  if(cur){
+    try{ history.pushState({scr:cur},""); }catch(e){}   // 페이지 이탈 방지(다시 쌓기)
+    if(manualOn){ Game.closeManual(); return; }         // 열린 모달/시트 먼저 닫기
+    if(sheetOn){ Game.closeSheet(); return; }
+    // 저장·공유 안 한 실제 결과화면이면 유실 확인, 그 외(명전·도감·선택)는 바로 타이틀
+    if(cur==="s-end" && Game.lastResult){ Game.confirmReset(); }
+    else { Game.reset(); }
   }
 });
 // 공유 링크(?r=...)로 열렸으면 그 결과를 바로 재현
