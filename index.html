@@ -307,6 +307,16 @@
     filter:drop-shadow(0 6px 10px rgba(236,58,92,.22))}
   .px-anim.pop{animation:pxPop .45s cubic-bezier(.3,1.4,.5,1)}
   @keyframes pxPop{0%{transform:scale(.72)}60%{transform:scale(1.08)}100%{transform:scale(1)}}
+  /* 훈련 씬 2D 에셋 카드 (도트 폐기 → emo 2D 일러). 모든 컷을 동일 둥근카드 프레임에 담아 톤 통일감. */
+  .emo-holder{position:relative;display:flex;justify-content:center;align-items:center;width:236px;height:236px}
+  .emo-card{width:212px;height:212px;object-fit:cover;border-radius:28px;border:4px solid #fff;background:#fff;
+    box-shadow:0 12px 30px rgba(236,58,92,.22),0 2px 8px rgba(0,0,0,.10);will-change:transform}
+  .emo-card.in{animation:emoIn .5s cubic-bezier(.25,1.5,.5,1) both, emoFloat 2.7s ease-in-out .55s infinite}
+  .emo-card.res{animation:emoPop .55s cubic-bezier(.3,1.65,.5,1) both}
+  .emo-card.perfect-glow{box-shadow:0 0 24px rgba(255,207,63,.95),0 0 48px rgba(255,95,162,.55),0 12px 30px rgba(236,58,92,.22)}
+  @keyframes emoIn{0%{opacity:0;transform:scale(.55) translateY(16px)}60%{opacity:1;transform:scale(1.07)}100%{transform:scale(1) translateY(0)}}
+  @keyframes emoFloat{0%,100%{transform:translateY(0) rotate(-1.2deg)}50%{transform:translateY(-10px) rotate(1.2deg)}}
+  @keyframes emoPop{0%{transform:scale(.5) rotate(-9deg)}55%{transform:scale(1.13) rotate(3deg)}100%{transform:scale(1) rotate(0)}}
 
   /* 성장 서사 로그 */
   .growth{background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:12px 14px;
@@ -522,7 +532,7 @@ const REST = {k:"rest", ico:"😴", t:"휴식", d:"컨디션 회복 + 멘탈 ↑
 
 // 에셋 캐시버스터: 애니/스프라이트 갱신이 브라우저·Pages 하드캐시에 막혀 구버전 표시되던 문제 방지.
 // 애니 바꿀 때마다 이 값 갱신(날짜+접미).
-const ASSET_VER = "20260715a";
+const ASSET_VER = "20260715b";
 // 훈련 도트 연출: 활동별 동작(영차영차) + 결과별 마무리
 const TRAIN_FX = {
   vocal:   {motion:"fx-sing",   notes:["♪","♫","🎵"], word:"노래 연습 중"},
@@ -917,29 +927,27 @@ const Game = {
     const R  = RESULT_FX[jkey] || RESULT_FX.ok;
     // 활동별 담당 캐릭터(레티=토끼 / 리니=오리). 결과 애니도 같은 캐릭터로 통일.
     const cpfx = (ACT_CHAR[kind]||"rini")==="rety" ? "rety_" : "";
-    // ── Phase 1: 활동 (활동별 소품 픽셀 애니 + 활동별 음표) ──
-    // rest는 소품 없이 idle, 그 외는 활동전용 소품 애니(anim_act_*).
-    const p1src = (kind==="rest" ? `assets/pixel/anim_${cpfx}idle.png`
-                                 : `assets/pixel/anim_act_${kind}.png`) + `?v=${ASSET_VER}`;
+    // ── Phase 1: 활동 (레티리니 2D 일러 카드 + 활동별 음표) ──  ※도트 폐기, emo 2D 에셋 사용
+    const p1src = `assets/emo/act-${kind}.png?v=${ASSET_VER}`;   // act-{vocal|dance|visual|charm|acting|creative|rest}
     const notes = (fx.notes||["♪","♫","♪"]).map((n,i)=>
       `<span class="px-note n${i+1}">${n}</span>`).join("");
     ov.innerHTML=`<div class="px-stage" id="pxStage">
-        <div class="px-holder">
-          <img class="px-anim" id="emoChar" src="${p1src}" alt="">
+        <div class="emo-holder">
+          <img class="emo-card in" id="emoChar" src="${p1src}" alt="">
           ${notes}
         </div>
-        <div class="px-floor"></div>
         <div class="train-say" id="pxSay">${t("fx_"+kind)}…</div>
       </div>`;
     // ── Phase 2: 결과 (1.1초 뒤 결과 애니로 전환, 같은 캐릭터) ──
     clearTimeout(this._pxPhase);
     this._pxPhase=setTimeout(()=>{
       const el=document.getElementById('emoChar');
-      const sprite = jkey==="perfect" ? "great" : jkey;   // 각성 스프라이트 없음 → great 재사용
-      sfx(jkey);   // 결과음(great/ok/fail/dbad/perfect) — 판정 애니 전환과 동시에
-      if(el){ el.src=`assets/pixel/anim_${cpfx}${sprite}.png?v=${ASSET_VER}`; el.classList.add('pop');
+      const sprite = jkey==="perfect" ? "great" : jkey;   // 각성 전용컷 없음 → great 재사용
+      sfx(jkey);   // 결과음(great/ok/fail/dbad/perfect) — 판정 컷 전환과 동시에
+      if(el){ el.src=`assets/emo/res-${sprite}.png?v=${ASSET_VER}`;   // res-{great|ok|fail|dbad}
+              el.classList.remove('in'); void el.offsetWidth; el.classList.add('res');  // 결과 팝 연출
               if(jkey==="perfect") el.classList.add('perfect-glow'); }
-      const holder=document.querySelector('.px-holder');
+      const holder=document.querySelector('.emo-holder');
       if(holder) holder.querySelectorAll('.px-note').forEach(n=>n.remove()); // 결과엔 음표 제거
       if(jkey==="perfect") this.pxSparkle(ov,34,['#ffd35c','#ffe98a','#fff4c2','#ff5fa2'],false);
       else if(R.burst==="party") this.pxSparkle(ov,18,null,false);
