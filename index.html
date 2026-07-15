@@ -107,8 +107,13 @@
   .chip{display:inline-block;font-size:11px;padding:2px 8px;border-radius:20px;background:var(--panel2);
     color:var(--sub);margin-top:3px}
   .fans{text-align:right;flex:none}
-  .fans b{font-size:19px;color:var(--gold);display:block}
+  .fans b{font-size:19px;color:var(--gold);display:block;transition:transform .12s}
   .fans span{font-size:10px;color:var(--sub)}
+  .fans b.fanbump{animation:fanBump .5s cubic-bezier(.3,1.5,.5,1)}
+  @keyframes fanBump{0%{transform:scale(1);color:var(--gold)}35%{transform:scale(1.28);color:var(--accent)}100%{transform:scale(1);color:var(--gold)}}
+  /* 화면 전환 페이드/슬라이드 인 */
+  .screen.on{animation:screenIn .32s cubic-bezier(.2,.85,.3,1) both}
+  @keyframes screenIn{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
 
   .actbar{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px}
   .week{font-weight:800;font-size:15px}
@@ -904,6 +909,7 @@ const Game = {
     }
     const {base} = talentOf(idol.spec);
     this.st = {idol, ...base, cond:100, fans:0, week:1, busy:false, log:[]};
+    this._fansShown=0;   // 새 게임: 팬 카운트업 기준 리셋
     this.logWeek(t("start_log",{name:esc(idolName(idol))}));
     this.save();
     this.cutscene({act:t("cs_act1"), emoji:"🎬", title:t("cs1_title"), sub:t("cs1_sub"),
@@ -919,7 +925,7 @@ const Game = {
     else { av.style.backgroundImage="none"; av.textContent="🎤"; }
     document.getElementById("pName").textContent=idolName(idol);
     document.getElementById("pChip").textContent=idolGrp(idol);
-    document.getElementById("pFans").textContent=fmt(s.fans);
+    this.setFans(s.fans);   // 팬 수 카운트업(변할 때 숫자가 굴러오며 강조)
     document.getElementById("pWeek").textContent=t("p_week",{w:s.week});
     document.getElementById("pAct").textContent=this.actName(s.week);
     const cb=document.getElementById("condBar");
@@ -1088,9 +1094,21 @@ const Game = {
     row.classList.remove('bump'); void row.offsetWidth; row.classList.add('bump');
     setTimeout(()=>row.classList.remove('bump'), 760);
     if(badge && levelUp){ setTimeout(()=>{ badge.textContent=newG; badge.style.background=GRADE_COLOR[newG];
-      badge.classList.add('pop'); setTimeout(()=>badge.classList.remove('pop'), 700); }, 450); }
+      badge.classList.add('pop'); sfx('sparkle'); setTimeout(()=>badge.classList.remove('pop'), 700); }, 450); }
   },
 
+  // 헤더 팬 수 카운트업: 이전 표시값 → 새 값으로 숫자가 굴러오고, 늘면 살짝 튐(연출감)
+  setFans(to){
+    const el=document.getElementById("pFans"); if(!el) return;
+    const from = this._fansShown==null ? to : this._fansShown;
+    this._fansShown=to;
+    if(from===to){ el.textContent=fmt(to); return; }
+    if(to>from){ el.classList.remove("fanbump"); void el.offsetWidth; el.classList.add("fanbump"); }
+    const t0=performance.now(), dur=Math.min(1100,420+Math.abs(to-from)*0.6);
+    const step=(now)=>{ const p=Math.min(1,(now-t0)/dur); const e=1-Math.pow(1-p,3);
+      el.textContent=fmt(Math.round(from+(to-from)*e)); if(p<1) requestAnimationFrame(step); };
+    requestAnimationFrame(step);
+  },
   logWeek(html){ if(!this.st.log) this.st.log=[]; this.st.log.push(`<b>W${this.st.week}</b> · ${html}`); },
 
   showRoll(J, deltaHtml, done){
@@ -1130,6 +1148,7 @@ const Game = {
     if(!raw){ toast(t("toast_no_save")); return; }
     try{ this.st=JSON.parse(raw); }catch(e){ toast(t("toast_save_broken")); this.clearSave(); return; }
     if(!this.st.log) this.st.log=[];
+    this._fansShown=this.st.fans;   // 이어하기: 저장된 팬 수부터(0→튐 방지)
     show("s-play"); this.startWeek(); this.armBackGuard();
     toast(t("toast_resume",{w:this.st.week}));
   },
@@ -1188,6 +1207,7 @@ const Game = {
       <div class="ev-text">${pass?t("debut_pass_text"):t("debut_fail_text")}<br>
       ${t("debut_body",{bonus:fmt(bonus)})}</div>
       <button class="btn" onclick="Game.afterDebut()" data-i18n="debut_next">${t("debut_next")}</button></div>`;
+    if(pass){ sfx("win"); this.confetti(46,false); } else { sfx("fail"); }
   },
 
   // 라이벌과 순위 대결 (필수 경쟁 이벤트)
