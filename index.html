@@ -2205,7 +2205,39 @@ function initLangSwitch(){
   sel.innerHTML=langList().map(l=>`<option value="${l.code}"${l.code===window.LANG?" selected":""}>${l.name}</option>`).join("");
 }
 Game.changeLang=function(l){ setLang(l); applyI18n(); initLangSwitch();
-  document.getElementById("customName")&&(document.getElementById("customName").placeholder=t("sel_name_ph")); };
+  document.getElementById("customName")&&(document.getElementById("customName").placeholder=t("sel_name_ph"));
+  if(this.refreshTitle) this.refreshTitle();
+  this.refreshLang();   // 동적 렌더 화면(플레이·선택·도감·결과)은 applyI18n이 못 건드림 → 현재 화면 재렌더
+};
+Game.refreshLang=function(){
+  const on=id=>{const e=document.getElementById(id);return e&&e.classList.contains("on");};
+  if(this.st && on("s-play")){ this.render(); return; }
+  if(on("s-select")){ this.renderSpecPick(); this.search(); this.updateStartFab(); return; }
+  if(on("s-dex")){ this.showDex(); return; }
+  if(on("s-end")){ this.refreshEndTexts(); return; }
+};
+// 결과화면 언어 재적용(부작용 없이 표시 텍스트만 재계산)
+Game.refreshEndTexts=function(){
+  const r=this.lastResult;
+  if(!r){ this.showBoard(); return; }        // 명예의 전당(리더보드) 뷰
+  if(!this.st) return;
+  const end=this.ending(r.reachedWorld, r.finalRank);
+  const spStat=STATS.find(x=>x.k===this.st.idol.spec)||STATS[0];
+  const isCustom=this.st.idol.grp===t("custom_idol")||this.st.idol.grp==="커스텀 아이돌";
+  document.getElementById("endEmoji").textContent=end.emoji;
+  document.getElementById("endName").textContent=end.name;
+  document.getElementById("endSub").innerHTML=`${end.sub}<br><br>${t("end_fans",{fans:fmt(r.fans)})}`;
+  document.getElementById("oGrade").innerHTML=t("end_overall",{g:r.overall,c:spStat.c,ico:spStat.ico,spec:t("st_"+spStat.k)});
+  document.getElementById("endStage").textContent=
+    r.reachedWorld?(r.finalRank?t("end_stage_world",{rank:r.finalRank}):t("end_stage_world_nr")):t("end_stage_out");
+  document.getElementById("endIdolName").innerHTML=
+    esc(idolName(this.st.idol))+(this.st.idol.grp&&!isCustom?` <small>${esc(idolGrp(this.st.idol))}</small>`:` <small>${t("custom_short")}</small>`);
+  const gbox=document.getElementById("growthBox");
+  if(this.st.log&&this.st.log.length) gbox.querySelector("h3")&&(gbox.querySelector("h3").textContent=t("end_growth_title",{name:idolName(this.st.idol)}));
+  const sv=r.statVals.map(v=>({...v, n:t(v.k==='creative'?'st_creative_short':'st_'+v.k)}));
+  drawRadar(document.getElementById("radar"), sv, {dark:false, big:true});
+  this.renderBoard(null);
+};
 
 // 초기화
 initLangSwitch();
