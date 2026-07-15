@@ -111,15 +111,33 @@
   .fans span{font-size:10px;color:var(--sub)}
   .fans b.fanbump{animation:fanBump .5s cubic-bezier(.3,1.5,.5,1)}
   @keyframes fanBump{0%{transform:scale(1);color:var(--gold)}35%{transform:scale(1.28);color:var(--accent)}100%{transform:scale(1);color:var(--gold)}}
-  /* 화면 전환 페이드/슬라이드 인 */
-  .screen.on{animation:screenIn .32s cubic-bezier(.2,.85,.3,1) both}
-  @keyframes screenIn{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
+  /* 화면 전환 페이드 인 (※transform 금지 — .screen 안의 position:fixed 요소[startfab]의 기준이 바뀜) */
+  .screen.on{animation:screenIn .3s ease both}
+  @keyframes screenIn{from{opacity:0}to{opacity:1}}
 
   .actbar{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px}
   .week{font-weight:800;font-size:15px}
   .actbanner{font-size:12px;font-weight:700;padding:4px 10px;border-radius:20px;
     background:linear-gradient(135deg,var(--accent2),var(--accent))}
 
+  /* 활력 2열 (컨디션·멘탈) */
+  .vitals{display:flex;gap:10px;margin-bottom:10px}
+  .vital{flex:1;background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:8px 11px;
+    box-shadow:0 4px 14px rgba(236,58,92,.08)}
+  .vital .vlbl{display:flex;justify-content:space-between;font-size:11px;color:var(--sub);margin-bottom:5px;font-weight:700}
+  .vital .vlbl b{color:var(--txt);font-variant-numeric:tabular-nums}
+  .vital .bar{height:8px;background:var(--panel2);border-radius:20px;overflow:hidden}
+  .vital .bar>i{display:block;height:100%;border-radius:20px;transition:width .45s cubic-bezier(.3,.8,.4,1)}
+  /* 관문 카드: 돌파 예상 칩 · 임박 펄스 · 코치 멘트 */
+  .pr-fore{display:inline-flex;align-items:center;font-size:11px;font-weight:900;
+    padding:2px 9px;border-radius:20px;margin-left:5px;vertical-align:middle;white-space:nowrap}
+  .pr-fore.safe{background:#e6f8ef;color:#1f9d63}
+  .pr-fore.tight{background:#fff3e0;color:#c8862a}
+  .pr-fore.risk{background:#ffe6ea;color:#d63754}
+  .practice.urgent{border-color:var(--accent2)}
+  .practice.urgent .pr-buddy{animation:prBob 1.5s ease-in-out infinite, urgentGlow 1.1s ease-in-out infinite}
+  @keyframes urgentGlow{0%,100%{filter:none}50%{filter:drop-shadow(0 0 8px rgba(236,58,92,.6))}}
+  .pr-coach{margin-top:7px;font-size:12px;color:var(--accent);font-weight:700;line-height:1.35}
   .cond{margin-bottom:10px}
   .barlbl{display:flex;justify-content:space-between;font-size:12px;color:var(--sub);margin-bottom:4px}
   .barlbl b{color:var(--txt)}
@@ -494,10 +512,7 @@
       <span class="actbanner" id="pAct">Road to Debut</span>
     </div>
 
-    <div class="cond">
-      <div class="barlbl"><span data-i18n="p_cond">컨디션</span><b id="condTxt">100</b></div>
-      <div class="bar"><i id="condBar" style="width:100%;background:var(--good)"></i></div>
-    </div>
+    <div class="vitals" id="vitalsBox"></div>
 
     <div class="stats" id="statBox"></div>
     <div class="practice" id="practiceBox"></div>
@@ -545,7 +560,7 @@
 </div>
 
 <!-- 콘텐츠(다국어·아이돌DB) 갱신 시 v= 날짜를 올려 캐시 무효화 → 재방문 유저에게도 반영 -->
-<script src="i18n.js?v=20260715k"></script>
+<script src="i18n.js?v=20260715l"></script>
 <script src="idols.js?v=20260715d"></script>
 <script>
 // 검색용 아이돌: idols.js의 window.IDOL_DB (최애돌 실데이터 상위 250명). 로드 실패 시 빈 배열.
@@ -597,7 +612,7 @@ const REST = {k:"rest", ico:"😴", t:"휴식", d:"컨디션 회복 + 멘탈 ↑
 
 // 에셋 캐시버스터: 애니/스프라이트 갱신이 브라우저·Pages 하드캐시에 막혀 구버전 표시되던 문제 방지.
 // 애니 바꿀 때마다 이 값 갱신(날짜+접미).
-const ASSET_VER = "20260715e";
+const ASSET_VER = "20260715l";
 // 훈련 도트 연출: 활동별 동작(영차영차) + 결과별 마무리
 const TRAIN_FX = {
   vocal:   {motion:"fx-sing",   notes:["♪","♫","🎵"], word:"노래 연습 중"},
@@ -1001,6 +1016,34 @@ const Game = {
       ()=>{ show("s-play"); this.startWeek(); this.armBackGuard(); toast(t("start_toast",{name:idolName(idol)})); });
   },
   actName(w){ return w<=12?t("act_debut"):w<=36?t("act_domestic"):t("act_world"); },
+  // 다음 관문 돌파 예상(runCompet/debutJudge 공식에서 랜덤 뺀 기대치 vs 기준선). 스탯 변할 때마다 실시간 갱신.
+  gateForecast(s, nxw){
+    if(nxw===12){   // 데뷔 심사: total>=340 || peak>=150
+      const total=STATS.reduce((a,st)=>a+s[st.k],0), peak=Math.max(...STATS.map(st=>s[st.k]));
+      const r=Math.max(total/340, peak/150);
+      return r>=1.12?'safe':r>=0.85?'tight':'risk';
+    }
+    const c=COMPETS[nxw]; if(!c) return null;
+    let mine;
+    if(c.type==="stage"){
+      const f=c.field.reduce((a,k)=>a+s[k],0)/c.field.length;
+      mine=f*(0.55+0.45*s.cond/100);
+    } else {
+      const avg=STATS.reduce((a,st)=>a+s[st.k],0)/6, peak=Math.max(...STATS.map(st=>s[st.k]));
+      mine=Math.max(avg,peak*AWARD_PEAK_K)*(1+Math.min(0.45,s.fans/60000));
+    }
+    const r=mine/c.base;   // 라이벌 기대 파워≈base, 1등/통과엔 여유 필요
+    return r>=1.15?'safe':r>=0.88?'tight':'risk';
+  },
+  // 상황 반응형 코치 한 줄(버디 멘트) — 관문 임박·저컨디션·저멘탈·호조에 반응
+  coachLine(s, dday, fore){
+    if(dday>0 && dday<=2 && fore==='risk') return t("coach_gate_risk");
+    if(dday>0 && dday<=3)                  return t("coach_gate_near");
+    if(s.cond<28)                          return t("coach_low_cond");
+    if(s.mental<28)                        return t("coach_low_mental");
+    if(fore==='safe')                      return t("coach_hot");
+    return t("coach_default");
+  },
 
   render(){
     const s=this.st, idol=s.idol;
@@ -1012,17 +1055,16 @@ const Game = {
     this.setFans(s.fans);   // 팬 수 카운트업(변할 때 숫자가 굴러오며 강조)
     document.getElementById("pWeek").textContent=t("p_week",{w:s.week});
     document.getElementById("pAct").textContent=this.actName(s.week);
-    const cb=document.getElementById("condBar");
-    cb.style.width=Math.max(0,s.cond)+"%";
-    cb.style.background = s.cond>55?"var(--good)":s.cond>25?"var(--visual)":"var(--bad)";
-    document.getElementById("condTxt").textContent=Math.max(0,Math.round(s.cond));
-    document.getElementById("statBox").innerHTML=[...STATS,MENTAL].map(st=>{
-      if(st.k==="mental"){
-        const mv=Math.round(s.mental);
-        return `<div class="stat" data-k="mental"><span class="k">${st.ico} ${t("st_"+st.k)}</span>
-          <span class="bar"><i style="width:${Math.min(100,mv)}%;background:${st.c}"></i></span>
-          <span class="v">${mv}</span></div>`;
-      }
+    // 활력 2열: 컨디션 + 멘탈 (한눈에 두 핵심 자원)
+    const cond=Math.max(0,Math.round(s.cond)), mv=Math.max(0,Math.round(s.mental));
+    const condC = s.cond>55?"var(--good)":s.cond>25?"var(--visual)":"var(--bad)";
+    const menC  = s.mental>55?"var(--good)":s.mental>25?"var(--visual)":"var(--bad)";
+    document.getElementById("vitalsBox").innerHTML=
+      `<div class="vital"><div class="vlbl"><span>⚡ ${t("p_cond")}</span><b>${cond}</b></div>
+        <div class="bar"><i style="width:${Math.min(100,cond)}%;background:${condC}"></i></div></div>
+       <div class="vital"><div class="vlbl"><span>${MENTAL.ico} ${t("st_mental")}</span><b>${mv}</b></div>
+        <div class="bar"><i style="width:${Math.min(100,mv)}%;background:${menC}"></i></div></div>`;
+    document.getElementById("statBox").innerHTML=STATS.map(st=>{
       const p=Math.round(s[st.k]); const g=grade(p); const prog=progOf(p);
       return `<div class="stat" data-k="${st.k}"><span class="k">${st.ico} ${t("st_"+st.k)}</span>
         <span class="bar"><i style="width:${prog}%;background:${st.c}"></i></span>
@@ -1037,12 +1079,18 @@ const Game = {
     const prevW=(MS.filter(m=>m.w<nx.w).map(m=>m.w).pop())||0;
     const prog=Math.max(6,Math.min(100,Math.round((s.week-prevW)/(nx.w-prevW)*100)));
     const dday=nx.w-s.week;
-    document.getElementById("practiceBox").innerHTML=
+    const fore=this.gateForecast(s, nx.w);   // 다음 관문 돌파 예상(스탯 변하면 실시간 갱신)
+    const foreChip = fore ? `<span class="pr-fore ${fore}">${t("fc_"+fore)}</span>` : "";
+    const urgent = (dday>0 && dday<=3);       // 관문 임박 → 카드 펄스
+    const pbox=document.getElementById("practiceBox");
+    pbox.className="practice"+(urgent?" urgent":"");
+    pbox.innerHTML=
       `<img class="pr-buddy" src="assets/emo/buddy.png" alt="">
        <div class="pr-info">
-         <div class="pr-label">${dday>0?t("pr_next_dday",{d:dday}):t("pr_next_now")}</div>
+         <div class="pr-label">${dday>0?t("pr_next_dday",{d:dday}):t("pr_next_now")} ${foreChip}</div>
          <div class="pr-next">${t(nx.k)}</div>
          <div class="pr-track"><i style="width:${prog}%"></i></div>
+         <div class="pr-coach">🐥 ${this.coachLine(s, dday, fore)}</div>
        </div>`;
     document.getElementById("actionBox").innerHTML=
       `<div class="agrid">${TRAININGS.map(tr=>`
