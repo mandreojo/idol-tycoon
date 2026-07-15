@@ -595,7 +595,7 @@
 </div>
 
 <!-- 콘텐츠(다국어·아이돌DB) 갱신 시 v= 날짜를 올려 캐시 무효화 → 재방문 유저에게도 반영 -->
-<script src="i18n.js?v=20260715o"></script>
+<script src="i18n.js?v=20260715p"></script>
 <script src="idols.js?v=20260715d"></script>
 <script>
 // 검색용 아이돌: idols.js의 window.IDOL_DB (최애돌 실데이터 상위 250명). 로드 실패 시 빈 배열.
@@ -930,11 +930,13 @@ const RIVAL_EMOJI = ["💫","⚡","🌙","🥀","🌸","🔮","🌌","🖤","✴
 //   ※ 연말 시상식(대상)은 1년에 한 번 → 52주에만. 36주는 '월드 진출 심사'이지 대상 아님.
 const AWARD_PEAK_K = 0.34;   // 시상식에서 원톱 스탯 반영 계수(낮을수록 몰빵 불리)
 const COMPETS = {
-  20:{type:"stage", emoji:"📺", tk:"cp_t_20", field:["vocal","dance","visual","charm"], base:150},
-  28:{type:"stage", emoji:"☀️", tk:"cp_t_28", field:["vocal","dance","visual","charm"], base:190},
-  36:{type:"award", emoji:"🛫", tk:"cp_t_36", base:290, gate:true},
-  44:{type:"stage", emoji:"🌍", tk:"cp_t_44", field:["vocal","dance","visual","charm"], base:320},
-  52:{type:"award", emoji:"👑", tk:"cp_t_52", base:490, final:true},
+  // base 2026-07-15 재조정(sim): 곡선 D3 상향으로 인플레된 스탯에 맞춰 라이벌 기준선 재설정.
+  // 정석플레이 통과율 목표 뒤로갈수록 하락(음방60·52%→월드진출38%→월드쇼30%→대상20%), 월드 이후는 확실히 빡세게.
+  20:{type:"stage", emoji:"📺", tk:"cp_t_20", field:["vocal","dance","visual","charm"], base:120},
+  28:{type:"stage", emoji:"☀️", tk:"cp_t_28", field:["vocal","dance","visual","charm"], base:160},
+  36:{type:"award", emoji:"🛫", tk:"cp_t_36", base:405, gate:true},
+  44:{type:"stage", emoji:"🌍", tk:"cp_t_44", field:["vocal","dance","visual","charm"], base:310},
+  52:{type:"award", emoji:"👑", tk:"cp_t_52", base:685, final:true},
 };
 
 // ===== 엔딩 도감 (반복 플레이 훅) =====
@@ -954,10 +956,11 @@ const ENDING_DEX=[
   {id:"rookie",  emoji:"🐣", name:"아쉬운 유망주",   tier:"C",  hint:"실력은 붙었는데 월드 진출에서 미끄러짐"},
   {id:"local",   emoji:"🌗", name:"지역 스타",       tier:"C",  hint:"월드 진출의 벽을 넘지 못하고"},
   {id:"disband", emoji:"💔", name:"팀 해체",         tier:"F",  hint:"바닥에서 끝나버린 비운의 결말"},
+  {id:"slacker", emoji:"🛋️", name:"숨만 쉰 아이돌",  tier:"F",  hint:"🥚 이스터에그 · 훈련을 아예 안 하면…?"},
 ];
 const DEX_BY_EMOJI={"🌟":"ss","👑":"onetop","🏆":"allround","🌈":"allround","🎆":"stage",
   "🎉":"crown","⭐":"bigstar","✨":"bigstar","🌱":"longrun","🌗":"local","💔":"disband",
-  "🎬":"actingstar","🎹":"songwriter","💞":"fandom","🪄":"soloist","🐣":"rookie"};
+  "🎬":"actingstar","🎹":"songwriter","💞":"fandom","🪄":"soloist","🐣":"rookie","🛋️":"slacker"};
 function dexIdOf(end){ if(end.emoji==="🎭") return end.tier==="C"?"local":"stageA";
   return DEX_BY_EMOJI[end.emoji]||"local"; }
 
@@ -1600,6 +1603,8 @@ const Game = {
     const stage4=(s.vocal+s.dance+s.visual+s.charm)/4;   // 무대 4종 평균
     const stageStar = stage4>=440 && minV<340;            // 무대 특화(연기·크리 낮음)
     const topName=t("st_"+top.k);
+    // 🥚 이스터에그: 훈련 거의 안 하고 휴식·멘탈케어만 → 스탯 바닥, 데뷔조차 못한 은둔 결말. 최우선 판정.
+    if(total < 200) return {emoji:"🛋️",name:t("e_slacker_n"),tier:"F",sub:t("e_slacker_s")};
     // 외길 장인(mono): 한 스탯만 몰빵하고 나머진 방치. 순위·월드 무관한 괴짜 엔딩.
     const soloist = top.v>=560 && (total-top.v)<680;
 
