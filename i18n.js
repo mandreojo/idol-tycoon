@@ -293,6 +293,7 @@ window.I18N = {
     ev_birthday_title:"생일 지하철 서포트", ev_birthday_text:"팬클럽이 네 생일 맞이 지하철 광고를 걸었어!",
     ev_birthday_c1:"팬들에게 감사 인사 전하기 (팬 ↑, 멘탈 +12)", ev_birthday_c2:"생일 라이브 켜기 (끼 +12, 팬 ↑, 컨디션 -5)",
     ev_odds:"· 성공 {pct}%",
+    ev_banner:"💫 돌발 이벤트",
   },
   en: {
     lang_name:"English",
@@ -565,6 +566,7 @@ window.I18N = {
     ev_birthday_title:"Birthday Subway Ad", ev_birthday_text:"Your fan club put up a subway ad for your birthday!",
     ev_birthday_c1:"Thank the fans (Fans ↑, Mental +12)", ev_birthday_c2:"Go live for your birthday (Charm +12, Fans ↑, Condition -5)",
     ev_odds:"· {pct}% success",
+    ev_banner:"💫 Event!",
   },
   ja: {
     lang_name:"日本語",
@@ -837,6 +839,7 @@ window.I18N = {
     ev_birthday_title:"誕生日の地下鉄広告", ev_birthday_text:"ファンクラブが君の誕生日を祝う地下鉄広告を出したよ!",
     ev_birthday_c1:"ファンに感謝を伝える (ファン↑、メンタル+12)", ev_birthday_c2:"誕生日ライブ配信 (華+12、ファン↑、コンディション-5)",
     ev_odds:"· 成功{pct}%",
+    ev_banner:"💫 突発イベント",
   },
   "zh-cn": {
     lang_name:"简体中文",
@@ -1109,6 +1112,7 @@ window.I18N = {
     ev_birthday_title:"生日地铁应援", ev_birthday_text:"粉丝团为你的生日投放了地铁广告！",
     ev_birthday_c1:"向粉丝致谢 (粉丝↑、心态+12)", ev_birthday_c2:"开生日直播 (才艺+12、粉丝↑、状态-5)",
     ev_odds:"· 成功率{pct}%",
+    ev_banner:"💫 突发事件",
   },
   "zh-tw": {
     lang_name:"繁體中文",
@@ -1381,6 +1385,7 @@ window.I18N = {
     ev_birthday_title:"生日地鐵應援", ev_birthday_text:"粉絲團為你的生日投放了地鐵廣告！",
     ev_birthday_c1:"向粉絲致謝 (粉絲↑、心態+12)", ev_birthday_c2:"開生日直播 (才藝+12、粉絲↑、狀態-5)",
     ev_odds:"· 成功率{pct}%",
+    ev_banner:"💫 突發事件",
   },
 };
 

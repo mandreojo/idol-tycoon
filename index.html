@@ -213,11 +213,20 @@
   .px-anim.perfect-glow{filter:drop-shadow(0 0 10px rgba(255,207,63,.9)) drop-shadow(0 0 20px rgba(255,95,162,.6))}
   .delta{font-size:15px;color:var(--sub);line-height:1.7;margin-top:6px}
   .delta b{color:var(--txt)}
-  .ev-card{background:var(--panel);border:1px solid var(--line);border-radius:20px;padding:22px 20px;width:100%}
+  .ev-card{background:var(--panel);border:1px solid var(--line);border-radius:20px;padding:22px 20px;width:100%;animation:evCardIn .34s cubic-bezier(.3,1.2,.5,1)}
+  @keyframes evCardIn{from{transform:scale(.92) translateY(14px);opacity:0}to{transform:none;opacity:1}}
+  .ev-banner{display:inline-block;font-size:12px;font-weight:800;color:var(--accent);background:rgba(236,58,92,.1);padding:3px 13px;border-radius:20px;margin-bottom:8px;animation:evBannerPop .42s cubic-bezier(.3,1.5,.5,1)}
+  @keyframes evBannerPop{from{transform:scale(.6);opacity:0}to{transform:scale(1);opacity:1}}
   .ev-emoji{font-size:44px}
   .ev-title{font-size:19px;font-weight:800;margin:8px 0 6px}
   .ev-text{font-size:14px;color:var(--sub);line-height:1.6;margin-bottom:16px}
   .ev-choices{display:grid;gap:9px}
+  /* 오클릭 방지: 선택지는 살짝 뒤에 등장 + 그 전엔 클릭 무효 */
+  .ev-choices.locked{pointer-events:none}
+  .ev-choices .btn{opacity:0;transform:translateY(10px);transition:opacity .3s ease,transform .32s cubic-bezier(.3,1.2,.5,1)}
+  .ev-choices.ready .btn{opacity:1;transform:none}
+  .ev-choices.ready .btn:nth-child(2){transition-delay:.09s}
+  .ev-choices.ready .btn:nth-child(3){transition-delay:.18s}
 
   /* end */
   #s-end{overflow-y:auto}
@@ -595,7 +604,7 @@
 </div>
 
 <!-- 콘텐츠(다국어·아이돌DB) 갱신 시 v= 날짜를 올려 캐시 무효화 → 재방문 유저에게도 반영 -->
-<script src="i18n.js?v=20260715q"></script>
+<script src="i18n.js?v=20260715r"></script>
 <script src="idols.js?v=20260715d"></script>
 <script>
 // 검색용 아이돌: idols.js의 window.IDOL_DB (최애돌 실데이터 상위 250명). 로드 실패 시 빈 배열.
@@ -647,7 +656,7 @@ const REST = {k:"rest", ico:"😴", t:"휴식", d:"컨디션 회복 + 멘탈 ↑
 
 // 에셋 캐시버스터: 애니/스프라이트 갱신이 브라우저·Pages 하드캐시에 막혀 구버전 표시되던 문제 방지.
 // 애니 바꿀 때마다 이 값 갱신(날짜+접미).
-const ASSET_VER = "20260715r";
+const ASSET_VER = "20260715s";
 // ===== Firebase (Firestore REST) — 서버 공유 리더보드. apiKey는 브라우저용 공개키(시크릿 아님), 실보안은 Security Rules =====
 const FB_PID="idol-tycoon", FB_KEY="AIzaSyCUgSzgS2DBf58G6-lHzO77Qn0ZkZglAeE";
 const FS_BASE=`https://firestore.googleapis.com/v1/projects/${FB_PID}/databases/(default)/documents`;
@@ -1398,9 +1407,9 @@ const Game = {
     const ov=document.getElementById("ov");
     ov.className="ov on";
     const eid=ev.id;
-    ov.innerHTML=`<div class="ev-card"><div class="ev-emoji">${ev.emoji}</div>
+    ov.innerHTML=`<div class="ev-card"><div class="ev-banner">${t("ev_banner")}</div><div class="ev-emoji">${ev.emoji}</div>
       <div class="ev-title">${t("ev_"+eid+"_title")}</div><div class="ev-text">${t("ev_"+eid+"_text")}</div>
-      <div class="ev-choices" id="evc"></div></div>`;
+      <div class="ev-choices locked" id="evc"></div></div>`;
     ov.onclick=null;
     const box=document.getElementById("evc");
     ev.choices.forEach((ch,i)=>{
@@ -1428,6 +1437,8 @@ const Game = {
       };
       box.appendChild(b);
     });
+    // 오클릭 방지: 훈련 연타 관성이 멈출 시간(0.65s) 뒤에 선택지 활성화 + 등장 연출
+    setTimeout(()=>{ box.classList.remove("locked"); box.classList.add("ready"); try{sfx("whoosh");}catch(e){} }, 650);
   },
 
   debutJudge(){
