@@ -82,6 +82,10 @@
     background:var(--panel);color:var(--txt);font-size:13px;font-weight:700;cursor:pointer;transition:.1s}
   .sp.on{border-color:var(--accent);box-shadow:0 0 0 2px var(--accent) inset}
   .sp .spico{font-size:20px;display:block;margin-bottom:3px}
+  .genderpick{display:flex;gap:8px}
+  .gsel{flex:1;appearance:none;border:1px solid var(--line);border-radius:12px;padding:11px 4px;
+    background:var(--panel);color:var(--txt);font-size:14px;font-weight:700;cursor:pointer;transition:.1s}
+  .gsel.on{border-color:var(--accent);box-shadow:0 0 0 2px var(--accent) inset;color:var(--accent)}
   #s-select .grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;overflow-y:auto;padding:4px 0 12px}
   .card{background:var(--panel);border:1px solid var(--line);border-radius:16px;overflow:hidden;
     cursor:pointer;transition:transform .1s,border-color .1s;position:relative}
@@ -95,11 +99,11 @@
 
   /* PLAY header */
   .top{display:flex;align-items:center;gap:12px;margin-bottom:12px}
-  .avatar{width:76px;height:76px;border-radius:18px;background:#ffe0e6 center/cover no-repeat;
-    flex:none;border:2.5px solid var(--accent);display:flex;align-items:center;justify-content:center;font-size:38px;
-    box-shadow:0 6px 16px rgba(236,58,92,.22)}
+  .avatar{width:104px;height:104px;border-radius:22px;background:#ffe0e6 center/cover no-repeat;
+    flex:none;border:3px solid var(--accent);display:flex;align-items:center;justify-content:center;font-size:50px;
+    box-shadow:0 8px 20px rgba(236,58,92,.28)}
   .top .meta{flex:1;min-width:0}
-  .top .nm{font-weight:800;font-size:17px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .top .nm{font-weight:800;font-size:21px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
   .chip{display:inline-block;font-size:11px;padding:2px 8px;border-radius:20px;background:var(--panel2);
     color:var(--sub);margin-top:3px}
   .fans{text-align:right;flex:none}
@@ -138,7 +142,7 @@
   .pr-track{height:8px;background:var(--panel2);border-radius:20px;overflow:hidden}
   .pr-track>i{display:block;height:100%;border-radius:20px;transition:width .5s;
     background:linear-gradient(90deg,var(--accent2),var(--accent))}
-  .actions{margin-top:auto}
+  .actions{margin-top:14px}
   .act .d{margin-left:5px}
   .agrid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px}
   .act{display:flex;align-items:center;gap:9px;background:var(--panel);border:1px solid var(--line);
@@ -170,6 +174,7 @@
 
   /* end */
   #s-end{overflow-y:auto}
+  #s-play{overflow-y:auto}  /* 아이콘 확대 등으로 짧은 화면서 넘칠 때 스크롤(클리핑 방지) */
   .endtitle{font-size:14px;color:var(--sub);font-weight:700}
   .end-idol{text-align:center;margin:8px 0 2px}
   .end-avatar{width:100px;height:100px;border-radius:50%;object-fit:cover;background:#ffe0e6;
@@ -409,7 +414,12 @@
         <span id="upPh">📷<br><small data-i18n="sel_photo">사진 올리기 (선택)</small></span>
       </label>
       <input class="srch" id="customName" placeholder="아이돌 이름 (최대 10자)" data-i18n-ph="sel_name_ph" maxlength="10" oninput="Game.customValidate()" autocomplete="off">
-      <p class="muted" style="margin:2px 0 7px" data-i18n="sel_pick_spec">타고난 특기를 골라</p>
+      <p class="muted" style="margin:2px 0 5px" data-i18n="sel_pick_gender">성별을 골라</p>
+      <div class="genderpick" id="genderPick">
+        <button type="button" class="gsel on" data-g="F" onclick="Game.pickGender('F')"><span data-i18n="gender_f">👩 여자</span></button>
+        <button type="button" class="gsel" data-g="M" onclick="Game.pickGender('M')"><span data-i18n="gender_m">👨 남자</span></button>
+      </div>
+      <p class="muted" style="margin:8px 0 7px" data-i18n="sel_pick_spec">타고난 특기를 골라</p>
       <div class="specpick" id="specPick"></div>
     </div>
 
@@ -483,11 +493,14 @@
 </div>
 
 <!-- 콘텐츠(다국어·아이돌DB) 갱신 시 v= 날짜를 올려 캐시 무효화 → 재방문 유저에게도 반영 -->
-<script src="i18n.js?v=20260715a"></script>
-<script src="idols.js?v=20260714b"></script>
+<script src="i18n.js?v=20260715d"></script>
+<script src="idols.js?v=20260715d"></script>
 <script>
 // 검색용 아이돌: idols.js의 window.IDOL_DB (최애돌 실데이터 상위 250명). 로드 실패 시 빈 배열.
 const IDOLS = window.IDOL_DB || [];
+// 영문모드 이름 표기: 아이돌 영문명(nameEn)·그룹 영문명(grpEn) 있으면 사용, 없으면(커스텀 등) 한글 폴백.
+function idolName(i){ return (typeof LANG!=="undefined" && LANG==="en" && i && i.nameEn) ? i.nameEn : (i ? i.name : ""); }
+function idolGrp(i){ return (typeof LANG!=="undefined" && LANG==="en" && i && i.grpEn) ? i.grpEn : (i ? (i.grp||"") : ""); }
 
 // 6대 능력치 (육각형)
 const STATS = [
@@ -689,6 +702,25 @@ const EVENTS = [
      {t:"강행군 (비주얼·끼 +14, 컨디션 -16, 팬 ↑↑)", fx:s=>{s.visual+=14;s.charm+=14;s.cond-=16;s.fans+=1400;}},
      {t:"국내 집중 (팬 +안정)", fx:s=>{s.fans+=600;}},
    ]},
+  // ── 성별 이벤트 (아이돌 cat=F/M에 따라만 등장) ──
+  {id:"concept_f", gender:"F", emoji:"💃", title:"컨셉 회의: 청순 vs 걸크러시", text:"다음 컴백 컨셉을 정한다. 파격 변신은 화제성 폭발이지만 기존 팬 반응은 갈려.",
+   choices:[
+     {t:"걸크러시로 파격 변신", odds:s=>0.4+s.visual/1500+s.charm/1500,
+       win:{label:"컨셉 대성공·역주행!",emoji:"🔥",desc:"비주얼 <b>+26</b> · 끼 <b>+18</b> · 팬 <b>↑↑</b>",
+            fx:s=>{s.visual+=26;s.charm+=18;s.fans+=Math.round(1800+s.visual*4);s.cond-=8;}},
+       lose:{label:"컨셉 미스·팬 이탈",emoji:"😮‍💨",desc:"멘탈 <b>-12</b> · 팬 <b>↓</b>",
+            fx:s=>{s.mental-=12;s.fans=Math.round(s.fans*0.9);}}},
+     {t:"청순 컨셉 유지 (안정, 팬 +소폭)", fx:s=>{s.fans+=700;s.cond+=4;}},
+   ]},
+  {id:"concept_m", gender:"M", emoji:"🔥", title:"컨셉 회의: 청량 vs 짐승돌", text:"다음 컴백 컨셉. 청량은 안전빵, 짐승돌은 입덕직캠 대박 아니면 오글 논란.",
+   choices:[
+     {t:"짐승돌 컨셉 도전", odds:s=>0.4+s.dance/1500+s.visual/1500,
+       win:{label:"입덕직캠 터짐!",emoji:"🤩",desc:"비주얼 <b>+22</b> · 댄스 <b>+22</b> · 팬 <b>↑↑</b>",
+            fx:s=>{s.visual+=22;s.dance+=22;s.fans+=Math.round(1800+s.dance*4);s.cond-=8;}},
+       lose:{label:"오글 논란·밈화",emoji:"😬",desc:"멘탈 <b>-12</b> · 팬 <b>↓</b>",
+            fx:s=>{s.mental-=12;s.fans=Math.round(s.fans*0.9);}}},
+     {t:"청량 컨셉 유지 (안정, 팬 +소폭)", fx:s=>{s.fans+=700;s.cond+=4;}},
+   ]},
 ];
 
 // ===== 경쟁(필수 이벤트) — 라이벌과 순위 대결 =====
@@ -727,11 +759,12 @@ function dexIdOf(end){ if(end.emoji==="🎭") return end.tier==="C"?"local":"sta
   return DEX_BY_EMOJI[end.emoji]||"local"; }
 
 const Game = {
-  st:null, lastResult:null, selIdol:null, curMode:"search", customSpec:null, customImg:null,
+  st:null, lastResult:null, selIdol:null, curMode:"search", customSpec:null, customImg:null, customGender:"F",
 
   goSelect(){
-    this.selIdol=null; this.customImg=null; this.customSpec=null;
+    this.selIdol=null; this.customImg=null; this.customSpec=null; this.customGender="F";
     this.renderSpecPick();
+    document.querySelectorAll("#genderPick .gsel").forEach(b=>b.classList.toggle("on", b.dataset.g==="F"));
     document.getElementById("idolSearch").value="";
     document.getElementById("customName").value="";
     document.getElementById("uploader").style.backgroundImage="none";
@@ -758,8 +791,8 @@ const Game = {
     grid.innerHTML = list.map(i=>{
       return `<div class="card" data-id="${i.id}" onclick="Game.pick(${i.id})">
         <span class="ph" style="background-image:url('${i.img}')"></span>
-        <div class="nm">${esc(i.name)}</div>
-        <div class="gp">${esc(i.grp)}</div>
+        <div class="nm">${esc(idolName(i))}</div>
+        <div class="gp">${esc(idolGrp(i))}</div>
       </div>`;}).join("");
   },
   pick(id){
@@ -776,6 +809,10 @@ const Game = {
     this.customSpec=k;
     document.querySelectorAll("#specPick .sp").forEach(b=>b.classList.toggle("on", b.dataset.k===k));
     this.customValidate();
+  },
+  pickGender(g){
+    this.customGender=g;
+    document.querySelectorAll("#genderPick .gsel").forEach(b=>b.classList.toggle("on", b.dataset.g===g));
   },
   customPhoto(ev){
     const f=ev.target.files && ev.target.files[0]; if(!f) return;
@@ -814,17 +851,17 @@ const Game = {
     if(this.curMode==="custom"){
       const nm=(document.getElementById("customName").value||t("my_idol")).trim().slice(0,10) || t("my_idol");
       if(!this.customSpec) return;
-      idol={id:"custom", name:nm, grp:t("custom_idol"), spec:this.customSpec, img:this.customImg||""};
+      idol={id:"custom", name:nm, grp:t("custom_idol"), spec:this.customSpec, img:this.customImg||"", cat:this.customGender||"F"};
     } else {
       idol=this.selIdol; if(!idol) return;
     }
     const {base} = talentOf(idol.spec);
     this.st = {idol, ...base, cond:100, fans:0, week:1, busy:false, log:[]};
-    this.logWeek(t("start_log",{name:esc(idol.name)}));
+    this.logWeek(t("start_log",{name:esc(idolName(idol))}));
     this.save();
     this.cutscene({act:t("cs_act1"), emoji:"🎬", title:t("cs1_title"), sub:t("cs1_sub"),
-      talk:t("cs1_talk",{name:idol.name})},
-      ()=>{ show("s-play"); this.startWeek(); this.armBackGuard(); toast(t("start_toast",{name:idol.name})); });
+      talk:t("cs1_talk",{name:idolName(idol)})},
+      ()=>{ show("s-play"); this.startWeek(); this.armBackGuard(); toast(t("start_toast",{name:idolName(idol)})); });
   },
   actName(w){ return w<=12?t("act_debut"):w<=36?t("act_domestic"):t("act_world"); },
 
@@ -833,8 +870,8 @@ const Game = {
     const av=document.getElementById("pAvatar");
     if(idol.img){ av.style.backgroundImage=`url('${idol.img}')`; av.textContent=""; }
     else { av.style.backgroundImage="none"; av.textContent="🎤"; }
-    document.getElementById("pName").textContent=idol.name;
-    document.getElementById("pChip").textContent=idol.grp;
+    document.getElementById("pName").textContent=idolName(idol);
+    document.getElementById("pChip").textContent=idolGrp(idol);
     document.getElementById("pFans").textContent=fmt(s.fans);
     document.getElementById("pWeek").textContent=t("p_week",{w:s.week});
     document.getElementById("pAct").textContent=this.actName(s.week);
@@ -1051,7 +1088,10 @@ const Game = {
   },
 
   showEvent(done){
-    const ev=EVENTS[Math.floor(Math.random()*EVENTS.length)], s=this.st;
+    const s=this.st;
+    // 성별 게이팅: gender 없는 공용 + 아이돌 성별(cat M/F) 일치 이벤트만 후보. 매 게임 성별 맞춤 경험.
+    const pool=EVENTS.filter(e=> !e.gender || e.gender===(s.idol.cat||"F"));
+    const ev=pool[Math.floor(Math.random()*pool.length)];
     const ov=document.getElementById("ov");
     ov.className="ov on";
     const eid=ev.id;
@@ -1118,7 +1158,7 @@ const Game = {
     }
     const idxs=[]; while(idxs.length<3){ const r=Math.floor(Math.random()*RIVAL_POOL.length); if(!idxs.includes(r)) idxs.push(r); }
     const rivals=idxs.map(i=>({name:RIVAL_POOL[i], emoji:RIVAL_EMOJI[i], score:c.base*(0.75+Math.random()*0.5), me:false}));
-    const board=[{name:s.idol.name, emoji:"🎤", score:mine, me:true}, ...rivals].sort((a,b)=>b.score-a.score);
+    const board=[{name:idolName(s.idol), emoji:"🎤", score:mine, me:true}, ...rivals].sort((a,b)=>b.score-a.score);
     const myRank=board.findIndex(r=>r.me)+1;
     this.resolveCompet(c, board, myRank);
   },
@@ -1270,7 +1310,7 @@ const Game = {
     const statVals=STATS.map(st=>({n:st.n,k:st.k,c:st.c,v:Math.round(s[st.k]),g:grade(Math.round(s[st.k]))}));
     const overall=grade(Math.round(statTotal/STATS.length));
     const spStat=STATS.find(x=>x.k===s.idol.spec)||STATS[0];
-    this.lastResult={name:s.idol.name,grp:s.idol.grp,ending:end.name,emoji:end.emoji,
+    this.lastResult={name:idolName(s.idol),grp:idolGrp(s.idol),ending:end.name,emoji:end.emoji,
       tier:end.tier,fans:s.fans,reachedWorld,statVals,overall,finalRank:finalRank||null,
       spec:s.idol.spec, specName:spStat.n, specIco:spStat.ico, specColor:spStat.c, img:s.idol.img||"",
       stage:reachedWorld?(finalRank?`글로벌 대상 ${finalRank}위`:"WORLD TOUR · WEEK 52"):"DOMESTIC 탈락"};
@@ -1279,7 +1319,7 @@ const Game = {
     if(s.idol.img){ eav.src=s.idol.img; eav.style.display=""; } else { eav.style.display="none"; }
     const isCustom = s.idol.grp===t("custom_idol") || s.idol.grp==="커스텀 아이돌";
     document.getElementById("endIdolName").innerHTML=
-      esc(s.idol.name)+(s.idol.grp && !isCustom?` <small>${esc(s.idol.grp)}</small>`:` <small>${t("custom_short")}</small>`);
+      esc(idolName(s.idol))+(s.idol.grp && !isCustom?` <small>${esc(idolGrp(s.idol))}</small>`:` <small>${t("custom_short")}</small>`);
     document.getElementById("endEmoji").textContent=end.emoji;
     document.getElementById("endName").textContent=end.name;
     const dexChip = dexNew ? `<div class="dex-unlock">${t("end_dex_unlock")}</div>` : "";
@@ -1288,7 +1328,7 @@ const Game = {
       t("end_overall",{g:overall,c:spStat.c,ico:spStat.ico,spec:t("st_"+spStat.k)});
     const gbox=document.getElementById("growthBox");
     if(s.log && s.log.length){ gbox.style.display="";
-      gbox.innerHTML=`<h3>${t("end_growth_title",{name:esc(s.idol.name)})}</h3>`+s.log.map(l=>`<div class="gl">${l}</div>`).join(""); }
+      gbox.innerHTML=`<h3>${t("end_growth_title",{name:esc(idolName(s.idol))})}</h3>`+s.log.map(l=>`<div class="gl">${l}</div>`).join(""); }
     else gbox.style.display="none";
     const sharedBanner=document.getElementById("sharedBanner");
     if(shared){
