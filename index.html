@@ -545,7 +545,7 @@
 </div>
 
 <!-- 콘텐츠(다국어·아이돌DB) 갱신 시 v= 날짜를 올려 캐시 무효화 → 재방문 유저에게도 반영 -->
-<script src="i18n.js?v=20260715g"></script>
+<script src="i18n.js?v=20260715h"></script>
 <script src="idols.js?v=20260715d"></script>
 <script>
 // 검색용 아이돌: idols.js의 window.IDOL_DB (최애돌 실데이터 상위 250명). 로드 실패 시 빈 배열.
@@ -879,12 +879,18 @@ const ENDING_DEX=[
   {id:"crown",   emoji:"🎉", name:"이변의 대관식",   tier:"A",  hint:"실력보다 화제성·팬덤으로 대상까지"},
   {id:"bigstar", emoji:"⭐", name:"믿고 보는 대형 스타",tier:"A", hint:"빈틈없이 두루 성장시켜 입상"},
   {id:"stageA",  emoji:"🎭", name:"무대형 스타",     tier:"A",  hint:"무대는 최강이지만 연기·작곡은 아직"},
+  {id:"actingstar",emoji:"🎬", name:"대세 연기돌",    tier:"S",  hint:"연기를 확실한 주무기로 세워 월드까지"},
+  {id:"songwriter",emoji:"🎹", name:"싱어송라이터",   tier:"S",  hint:"작곡을 주무기로 세워 월드까지"},
+  {id:"fandom",   emoji:"💞", name:"SNS 팬덤 제국",   tier:"A",  hint:"실력보다 순수 화력·팬덤만으로 대상"},
+  {id:"soloist",  emoji:"🪄", name:"외길 장인",       tier:"A",  hint:"한 재능만 극단적으로, 나머진 포기"},
   {id:"longrun", emoji:"🌱", name:"롱런형 아이돌",   tier:"B",  hint:"한 방은 없어도 꾸준함으로 월드까지"},
+  {id:"rookie",  emoji:"🐣", name:"아쉬운 유망주",   tier:"C",  hint:"실력은 붙었는데 월드 진출에서 미끄러짐"},
   {id:"local",   emoji:"🌗", name:"지역 스타",       tier:"C",  hint:"월드 진출의 벽을 넘지 못하고"},
   {id:"disband", emoji:"💔", name:"팀 해체",         tier:"F",  hint:"바닥에서 끝나버린 비운의 결말"},
 ];
 const DEX_BY_EMOJI={"🌟":"ss","👑":"onetop","🏆":"allround","🌈":"allround","🎆":"stage",
-  "🎉":"crown","⭐":"bigstar","✨":"bigstar","🌱":"longrun","🌗":"local","💔":"disband"};
+  "🎉":"crown","⭐":"bigstar","✨":"bigstar","🌱":"longrun","🌗":"local","💔":"disband",
+  "🎬":"actingstar","🎹":"songwriter","💞":"fandom","🪄":"soloist","🐣":"rookie"};
 function dexIdOf(end){ if(end.emoji==="🎭") return end.tier==="C"?"local":"stageA";
   return DEX_BY_EMOJI[end.emoji]||"local"; }
 
@@ -1480,10 +1486,17 @@ const Game = {
     const stage4=(s.vocal+s.dance+s.visual+s.charm)/4;   // 무대 4종 평균
     const stageStar = stage4>=440 && minV<340;            // 무대 특화(연기·크리 낮음)
     const topName=t("st_"+top.k);
+    // 외길 장인(mono): 한 스탯만 몰빵하고 나머진 방치. 순위·월드 무관한 괴짜 엔딩.
+    const soloist = top.v>=560 && (total-top.v)<680;
+
+    if(soloist) return {emoji:"🪄",name:t("e_soloist_n",{stat:topName}),tier:reachedWorld?"A":"B",
+      sub:t("e_soloist_s",{stat:topName,g:grade(top.v)})};
 
     if(!reachedWorld){
       if(total<680 && top.v<430) return {emoji:"💔",name:t("e_disband_n"),tier:"F",sub:t("e_disband_s")};
       if(stageStar) return {emoji:"🎭",name:t("e_stagelocal_n"),tier:"C",sub:t("e_stagelocal_s")};
+      // 중고신인: 실력은 붙었는데 관문(월드 진출)에서 아깝게 미끄러짐
+      if(total>=1600) return {emoji:"🐣",name:t("e_rookie_n"),tier:"C",sub:t("e_rookie_s")};
       return {emoji:"🌗",name:t("e_local_n",{stat:topName}),tier:"C",sub:t("e_local_s",{stat:topName})};
     }
     const champ=finalRank===1, podium=finalRank<=3;
@@ -1491,10 +1504,17 @@ const Game = {
     const onetop  = top.v>=620 && gap>=180;      // 한 스탯 S~SS 원톱
     const allround= minV>=340 && total>=2400;
     const solid   = minV>=230 && total>=1900;
+    const specialist = top.v>=500 && gap>=100;   // 특정 분야가 확실히 앞서는 스페셜리스트
 
     // SS — 6각 완성 (실력이 SS급, 순위 무관)
     if(superA) return {emoji:"🌟",name:t("e_ss_n"),tier:"SS",
       sub:t("e_ss_s",{champ:champ?t("e_ss_champ"):t("e_ss_nochamp")})};
+    // S/A — 연기돌 전향 (연기가 확실한 주무기)
+    if(specialist && top.k==="acting") return {emoji:"🎬",name:t("e_actingstar_n"),tier:podium?"S":"A",
+      sub:t("e_actingstar_s",{g:grade(top.v)})};
+    // S/A — 싱어송라이터 (작곡이 확실한 주무기)
+    if(specialist && top.k==="creative") return {emoji:"🎹",name:t("e_songwriter_n"),tier:podium?"S":"A",
+      sub:t("e_songwriter_s",{g:grade(top.v)})};
     // S — 대상 1위 + 원톱
     if(champ && onetop) return {emoji:"👑",name:t("ot_"+top.k),tier:"S",
       sub:t("e_onetop_champ_s",{stat:topName,g:grade(top.v)})};
@@ -1509,6 +1529,8 @@ const Game = {
     if(allround) return {emoji:"🌈",name:t("e_allround_n"),tier:"S",sub:t("e_allround_s")};
     // A — 무대형 (입상은 못했지만 무대는 최강)
     if(stageStar) return {emoji:"🎭",name:t("e_stageA_n"),tier:"A",sub:t("e_stageA_s")};
+    // A — SNS 팬덤 제국 (실력은 미미한데 순수 화력·팬덤만으로 대상)
+    if(champ && total<1650) return {emoji:"💞",name:t("e_fandom_n"),tier:"A",sub:t("e_fandom_s")};
     // A — 대상 1위지만 스탯은 평범 (화제성·팬덤으로 대관식)
     if(champ) return {emoji:"🎉",name:t("e_crown_n"),tier:"A",sub:t("e_crown_s")};
     // A — 준수 + 상위 입상
